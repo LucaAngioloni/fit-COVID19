@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import datetime
+import wget
+import os
 
 from scipy.optimize import curve_fit
 
@@ -14,33 +16,33 @@ def sigmoid_derivative(x, L, k, x0):
     return y
 
 def fit_sigmoid(ydata, title, ylabel):
-	xdata = np.array(list(range(len(ydata)))) - len(ydata)
+    xdata = np.array(list(range(len(ydata)))) - len(ydata)
 
-	popt, pcov = curve_fit(sigmoid, xdata, ydata, bounds=([0, 0, -100, 0], [100000, 1, 100, 10]))
+    popt, pcov = curve_fit(sigmoid, xdata, ydata, bounds=([0, 0, -100, 0], [100000, 1, 100, 10]))
 
-	print(title)
-	print('    fit: L=%5.3f, k=%5.3f, x0=%5.3f, y0=%5.3f' % tuple(popt))
+    print(title)
+    print('    fit: L=%5.3f, k=%5.3f, x0=%5.3f, y0=%5.3f' % tuple(popt))
 
-	# plt.plot(xdata, ydata, 'b-', label='data')
-	# plt.plot(xdata, sigmoid(xdata, *popt), 'r-', label='fit: L=%5.3f, k=%5.3f, x0=%5.3f, y0=%5.3f' % tuple(popt))
-	# plt.xlabel('giorni dopo 19 febbraio')
-	# plt.ylabel(ylabel)
-	# plt.legend()
-	# plt.show()
+    # plt.plot(xdata, ydata, 'b-', label='data')
+    # plt.plot(xdata, sigmoid(xdata, *popt), 'r-', label='fit: L=%5.3f, k=%5.3f, x0=%5.3f, y0=%5.3f' % tuple(popt))
+    # plt.xlabel('giorni dopo 19 febbraio')
+    # plt.ylabel(ylabel)
+    # plt.legend()
+    # plt.show()
 
-	# plt.figure(2)
+    # plt.figure(2)
 
-	total_xaxis = np.array(list(range(-5, 60))) - len(ydata)
-	plt.plot(total_xaxis, sigmoid(total_xaxis, *popt), 'g-', label='fit: L=%5.3f, k=%5.3f, x0=%5.3f, y0=%5.3f' % tuple(popt))
-	# y = np.zeros((50))
-	# y[:len(ydata)] = ydata
-	# plt.plot(list(range(50)), y, 'b-', label='data')
-	plt.plot(xdata, ydata, 'b-', label='data')
-	plt.xlabel('giorni (0 = oggi)')
-	plt.ylabel(ylabel)
-	plt.title(title + ' - ' + str(datetime.date.today().strftime("%d-%m-%Y")))
-	#plt.legend()
-	plt.show()
+    total_xaxis = np.array(list(range(-5, 60))) - len(ydata)
+    plt.plot(total_xaxis, sigmoid(total_xaxis, *popt), 'g-', label='fit: L=%5.3f, k=%5.3f, x0=%5.3f, y0=%5.3f' % tuple(popt))
+    # y = np.zeros((50))
+    # y[:len(ydata)] = ydata
+    # plt.plot(list(range(50)), y, 'b-', label='data')
+    plt.plot(xdata, ydata, 'b-', label='data')
+    plt.xlabel('giorni (0 = oggi)')
+    plt.ylabel(ylabel)
+    plt.title(title + ' - ' + str(datetime.date.today().strftime("%d-%m-%Y")))
+    #plt.legend()
+    plt.show()
 
 
 def fit_sigmoid_derivative(ydata, title, ylabel):
@@ -72,6 +74,16 @@ def fit_sigmoid_derivative(ydata, title, ylabel):
     plt.title(title + ' - ' + str(datetime.date.today().strftime("%d-%m-%Y")))
     # plt.legend()
     plt.show()
+
+if os.path.exists('data.csv'):
+    os.remove('data.csv')
+
+url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'
+try:
+    file = wget.download(url, out='data.csv')
+    print("\n")
+except:
+    print("BAD", url)
 
 data = pd.read_csv('data.csv')
 
