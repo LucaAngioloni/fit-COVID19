@@ -38,6 +38,9 @@ def fit_logistic(ydata, title, ylabel):
     plt.plot(total_xaxis, logistic(total_xaxis, *popt), 'g-', label='prediction')
     plt.plot(xdata, ydata, 'b-', label='real data')
 
+    # popt, pcov = curve_fit(logistic, xdata[:-4], ydata[:-4], p0=[20000, 0.5, 1, 0], bounds=([0, 0, -100, 0], [200000, 10, 100, 1]))
+    # plt.plot(total_xaxis, logistic(total_xaxis, *popt), 'r-', label='old prediction')
+
     total_xaxis = total_xaxis[len(ydata) - days_past:]
     plt.fill_between(total_xaxis, logistic(total_xaxis, *pbest), logistic(total_xaxis, *pworst), 
         facecolor='red', alpha=0.2, label='std')
@@ -68,6 +71,9 @@ def fit_logistic_derivative(ydata, title, ylabel):
     total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
     plt.plot(total_xaxis, logistic_derivative(total_xaxis, *popt), 'g-', label='prediction')
     plt.plot(xdata, ydata, 'b-', label='real data')
+
+    # popt, pcov = curve_fit(logistic_derivative, xdata[:-4], ydata[:-4], p0=[20000, 0.5, 1], bounds=([0, 0, -100], [200000, 10, 100]))
+    # plt.plot(total_xaxis, logistic_derivative(total_xaxis, *popt), 'r-', label='old prediction')
 
     # total_xaxis = total_xaxis[len(ydata) - days_past:]
     # plt.fill_between(total_xaxis, logistic_derivative(total_xaxis, *pbest), logistic_derivative(total_xaxis, *pworst), 
