@@ -19,38 +19,64 @@ def logistic_derivative(x, L, k, x0):
     return y
 
 def fit_logistic(ydata, title, ylabel):
-    xdata = np.array(list(range(len(ydata)))) - len(ydata)
+    xdata = np.array(list(range(-len(ydata), 0))) + 1
 
-    popt, pcov = curve_fit(logistic, xdata, ydata, bounds=([0, 0, -100, 0], [100000, 1, 100, 10]))
+    popt, pcov = curve_fit(logistic, xdata, ydata, p0=[20000, 0.5, 1, 0], bounds=([0, 0, -100, 0], [200000, 10, 100, 1]))
 
     print(title)
     print('    fit: L=%5.3f, k=%5.3f, x0=%5.3f, y0=%5.3f' % tuple(popt))
 
-    total_xaxis = np.array(list(range(days_past, days_future))) - len(ydata)
+    perr = np.sqrt(np.diag(pcov))
+    print(perr)
+
+    pworst = popt + perr
+    pbest = popt - perr
+
+    plt.figure(figsize=(15,8))
+
+    total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
     plt.plot(total_xaxis, logistic(total_xaxis, *popt), 'g-', label='prediction')
     plt.plot(xdata, ydata, 'b-', label='real data')
+
+    total_xaxis = total_xaxis[len(ydata) - days_past:]
+    plt.fill_between(total_xaxis, logistic(total_xaxis, *pbest), logistic(total_xaxis, *pworst), 
+        facecolor='red', alpha=0.2, label='std')
+
     plt.xlabel('giorni (0 = oggi)')
     plt.ylabel(ylabel)
     plt.title(title + ' - ' + str(datetime.date.today().strftime("%d-%m-%Y")))
-    plt.legend()
+    plt.legend(loc='upper left')
     plt.show()
 
 
 def fit_logistic_derivative(ydata, title, ylabel):
-    xdata = np.array(list(range(len(ydata)))) - len(ydata)
+    xdata = np.array(list(range(-len(ydata), 0))) + 1
 
-    popt, pcov = curve_fit(logistic_derivative, xdata, ydata, bounds=([0, 0, -100], [100000, 1, 100]))
+    popt, pcov = curve_fit(logistic_derivative, xdata, ydata, p0=[20000, 0.5, 1], bounds=([0, 0, -100], [200000, 10, 100]))
 
     print(title)
     print('    fit: L=%5.3f, k=%5.3f, x0=%5.3f' % tuple(popt))
 
-    total_xaxis = np.array(list(range(days_past, days_future))) - len(ydata)
+    perr = np.sqrt(np.diag(pcov))
+    print(perr)
+
+    pworst = popt + perr
+    pbest = popt - perr
+
+    plt.figure(figsize=(15,8))
+
+    total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
     plt.plot(total_xaxis, logistic_derivative(total_xaxis, *popt), 'g-', label='prediction')
     plt.plot(xdata, ydata, 'b-', label='real data')
+
+    # total_xaxis = total_xaxis[len(ydata) - days_past:]
+    # plt.fill_between(total_xaxis, logistic_derivative(total_xaxis, *pbest), logistic_derivative(total_xaxis, *pworst), 
+    #     facecolor='red', alpha=0.2, label='std')
+
     plt.xlabel('giorni (0 = oggi)')
     plt.ylabel(ylabel)
     plt.title(title + ' - ' + str(datetime.date.today().strftime("%d-%m-%Y")))
-    plt.legend()
+    plt.legend(loc='upper left')
     plt.show()
 
 if os.path.exists('data.csv'):
