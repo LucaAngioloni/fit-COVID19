@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-import datetime
 from datetime import timedelta
+from datetime import datetime
 import wget
 import os
 import sys
@@ -59,7 +59,7 @@ def logistic_derivative(x, L, k, x0):
     y = k * L * (np.exp(-k*(x-x0))) / np.power(1 + np.exp(-k*(x-x0)), 2)
     return y
 
-def fit_logistic(ydata, title, ylabel):
+def fit_logistic(ydata, title, ylabel, last_date):
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
     popt, pcov = curve_fit(logistic, xdata, ydata, p0=[20000, 0.5, 1, 0], bounds=([0, 0, -100, 0], [200000, 10, 100, 1]))
@@ -80,8 +80,8 @@ def fit_logistic(ydata, title, ylabel):
 
     total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
 
-    date_xdata = [datetime.date.today() + timedelta(days=int(i)) for i in xdata]
-    date_total_xaxis = [datetime.date.today() + timedelta(days=int(i)) for i in total_xaxis]
+    date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
+    date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
 
     ax.plot(date_total_xaxis, logistic(total_xaxis, *popt), 'g-', label='prediction')
     ax.plot(date_xdata, ydata, 'b-', label='real data')
@@ -90,7 +90,7 @@ def fit_logistic(ydata, title, ylabel):
     # ax.plot(date_total_xaxis, logistic(total_xaxis, *popt), 'r-', label='old prediction')
 
     future_axis = total_xaxis[len(ydata) - days_past:]
-    date_future_axis = [datetime.date.today() + timedelta(days=int(i)) for i in future_axis]
+    date_future_axis = [last_date + timedelta(days=int(i)) for i in future_axis]
     ax.fill_between(date_future_axis, logistic(future_axis, *pbest), logistic(future_axis, *pworst), 
         facecolor='red', alpha=0.2, label='std')
 
@@ -98,7 +98,7 @@ def fit_logistic(ydata, title, ylabel):
     ax.set_xticks(date_total_xaxis[start::show_every])
     ax.set_xlabel('Giorni - date')
     ax.set_ylabel(ylabel)
-    ax.set_title(title + ' - ' + str(datetime.date.today().strftime("%d-%m-%Y")))
+    ax.set_title(title + ' - ' + str(last_date.strftime("%d-%m-%Y")))
     ax.legend(loc='upper left')
     ax.grid(True)
 
@@ -109,7 +109,7 @@ def fit_logistic(ydata, title, ylabel):
         plt.show()
 
 
-def fit_logistic_derivative(ydata, title, ylabel):
+def fit_logistic_derivative(ydata, title, ylabel, last_date):
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
     popt, pcov = curve_fit(logistic_derivative, xdata, ydata, p0=[20000, 0.5, 1], bounds=([0, 0, -100], [200000, 10, 100]))
@@ -130,8 +130,8 @@ def fit_logistic_derivative(ydata, title, ylabel):
 
     total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
 
-    date_xdata = [datetime.date.today() + timedelta(days=int(i)) for i in xdata]
-    date_total_xaxis = [datetime.date.today() + timedelta(days=int(i)) for i in total_xaxis]
+    date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
+    date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
 
     ax.plot(date_total_xaxis, logistic_derivative(total_xaxis, *popt), 'g-', label='prediction')
     ax.plot(date_xdata, ydata, 'b-', label='real data')
@@ -140,7 +140,7 @@ def fit_logistic_derivative(ydata, title, ylabel):
     # ax.plot(date_total_xaxis, logistic_derivative(total_xaxis, *popt), 'r-', label='old prediction')
 
     future_axis = total_xaxis[len(ydata) - days_past:]
-    date_future_axis = [datetime.date.today() + timedelta(days=int(i)) for i in future_axis]
+    date_future_axis = [last_date + timedelta(days=int(i)) for i in future_axis]
     ax.fill_between(date_future_axis, logistic_derivative(future_axis, *pbest), logistic_derivative(future_axis, *pworst), 
         facecolor='red', alpha=0.2, label='std')
 
@@ -149,7 +149,7 @@ def fit_logistic_derivative(ydata, title, ylabel):
 
     ax.set_xlabel('Giorni - date')
     ax.set_ylabel(ylabel)
-    ax.set_title(title + ' - ' + str(datetime.date.today().strftime("%d-%m-%Y")))
+    ax.set_title(title + ' - ' + str(last_date.strftime("%d-%m-%Y")))
     ax.legend(loc='upper left')
     ax.grid(True)
     
@@ -171,18 +171,21 @@ except:
 
 data = pd.read_csv('data.csv')
 
+date_string = data.iloc[-1:]['data'].values[0]
+last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+
 ydata = data['totale_casi'].tolist()
-fit_logistic(ydata, 'Contagi', 'totale contagiati')
+fit_logistic(ydata, 'Contagi', 'totale contagiati', last_date)
 
 ydata = data['deceduti'].tolist()
-fit_logistic(ydata, 'Deceduti', 'totale deceduti')
+fit_logistic(ydata, 'Deceduti', 'totale deceduti', last_date)
 
 ydata = data['ricoverati_con_sintomi'].tolist()
-fit_logistic(ydata, 'Ricoverati', 'totale ricoverati')
+fit_logistic(ydata, 'Ricoverati', 'totale ricoverati', last_date)
 
 ydata = data['terapia_intensiva'].tolist()
-fit_logistic(ydata, 'Terapia Intensiva', 'totale in terapia')
+fit_logistic(ydata, 'Terapia Intensiva', 'totale in terapia', last_date)
 
 ydata = data['nuovi_attualmente_positivi'].tolist()
-fit_logistic_derivative(ydata, 'Nuovi contagiati', 'nuovi contagiati')
+fit_logistic_derivative(ydata, 'Nuovi contagiati', 'nuovi contagiati', last_date)
 
