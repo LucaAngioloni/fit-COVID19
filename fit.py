@@ -1,12 +1,22 @@
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
 import numpy as np
 import pandas as pd
 import datetime
 from datetime import timedelta
 import wget
 import os
+import sys
+
+do_imgs = False
+
+if len(sys.argv) > 1:
+    do_imgs = True
+    import matplotlib
+    matplotlib.use('Agg')
+    os.makedirs('imgs/', exist_ok=True)
+    
+
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 from scipy.optimize import curve_fit
 
@@ -92,7 +102,11 @@ def fit_logistic(ydata, title, ylabel):
     ax.legend(loc='upper left')
     ax.grid(True)
 
-    plt.show()
+    if do_imgs:
+        plt.savefig('imgs/' + title + '.png', dpi=200)
+        plt.clf()
+    else:
+        plt.show()
 
 
 def fit_logistic_derivative(ydata, title, ylabel):
@@ -139,7 +153,11 @@ def fit_logistic_derivative(ydata, title, ylabel):
     ax.legend(loc='upper left')
     ax.grid(True)
     
-    plt.show()
+    if do_imgs:
+        plt.savefig('imgs/' + title + '.png', dpi=200)
+        plt.clf()
+    else:
+        plt.show()
 
 if os.path.exists('data.csv'):
     os.remove('data.csv')

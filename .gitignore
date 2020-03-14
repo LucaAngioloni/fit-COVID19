@@ -130,3 +130,6 @@ dmypy.json
 
 
 data.csv
+imgs/
+
+.DS_Store
