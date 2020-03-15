@@ -9,4 +9,3 @@ Live demo: https://fit-covid19.herokuapp.com
 - Pandas
 - Numpy
 - ScyPy
-- wget (pip install wget)
