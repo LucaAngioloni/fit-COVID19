@@ -157,7 +157,7 @@ ydata = data['terapia_intensiva'].tolist()
 fit_curve(logistic, ydata, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std)
 
 ydata = data['dimessi_guariti'].tolist()
-p_healed, err_healed = fit_curve(logistic, ydata, 'Dimessi Guariti', 'totale dimessi guariti', last_date, 0.5)
+p_healed, err_healed = fit_curve(logistic, ydata, 'Dimessi Guariti', 'totale dimessi guariti', last_date, 0.3)
 
 ydata = data['nuovi_attualmente_positivi'].tolist()
 fit_curve(logistic_derivative, ydata, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d)
