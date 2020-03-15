@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 from datetime import timedelta
 from datetime import datetime
-import wget
+from io import StringIO
+from urllib import request as url_request
 import os
 import sys
 
@@ -20,6 +21,7 @@ import matplotlib.dates as mdates
 
 from scipy.optimize import curve_fit
 
+# This stuff because pandas or matplot lib complained...
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
@@ -59,13 +61,30 @@ def logistic_derivative(x, L, k, x0):
     y = k * L * (np.exp(-k*(x-x0))) / np.power(1 + np.exp(-k*(x-x0)), 2)
     return y
 
-def fit_logistic(ydata, title, ylabel, last_date):
+def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std):
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
-    popt, pcov = curve_fit(logistic, xdata, ydata, p0=[20000, 0.5, 1, 0], bounds=([0, 0, -100, 0], [200000, 10, 100, 1]))
+    if curve.__name__ == 'logistic':
+        p0=[20000, 0.5, 1, 0]
+        bounds=([0, 0, -100, 0], [200000, 10, 100, 1])
+        params_names = ['L', 'k', 'x0', 'y0']
+    elif curve.__name__ == 'logistic_derivative':
+        p0=[20000, 0.5, 1]
+        bounds=([0, 0, -100], [200000, 10, 100])
+        params_names = ['L', 'k', 'x0']
+    else:
+        print('this curve is unknown')
+        return -1
+
+    popt, pcov = curve_fit(curve, xdata, ydata, p0=p0, bounds=bounds)
 
     print(title)
-    print('    fit: L=%5.3f, k=%5.3f, x0=%5.3f, y0=%5.3f' % tuple(popt))
+    descr = '    fit: '
+    for i, param in enumerate(params_names):
+        descr = descr + "{}={:.3f}".format(param, popt[i])
+        if i < len(params_names) - 1:
+            descr = descr + ', '
+    print(descr)
 
     perr = np.sqrt(np.diag(pcov))
     print(perr)
@@ -83,7 +102,7 @@ def fit_logistic(ydata, title, ylabel, last_date):
     date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
     date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
 
-    ax.plot(date_total_xaxis, logistic(total_xaxis, *popt), 'g-', label='prediction')
+    ax.plot(date_total_xaxis, curve(total_xaxis, *popt), 'g-', label='prediction')
     ax.plot(date_xdata, ydata, 'b-', label='real data')
 
     # popt, pcov = curve_fit(logistic, xdata[:-4], ydata[:-4], p0=[20000, 0.5, 1, 0], bounds=([0, 0, -100, 0], [200000, 10, 100, 1]))
@@ -91,7 +110,7 @@ def fit_logistic(ydata, title, ylabel, last_date):
 
     future_axis = total_xaxis[len(ydata) - days_past:]
     date_future_axis = [last_date + timedelta(days=int(i)) for i in future_axis]
-    ax.fill_between(date_future_axis, logistic(future_axis, *pbest), logistic(future_axis, *pworst), 
+    ax.fill_between(date_future_axis, curve(future_axis, *pbest), curve(future_axis, *pworst), 
         facecolor='red', alpha=0.2, label='std')
 
     start = (len(ydata) - days_past - 1) % show_every
@@ -108,84 +127,38 @@ def fit_logistic(ydata, title, ylabel, last_date):
     else:
         plt.show()
 
-
-def fit_logistic_derivative(ydata, title, ylabel, last_date):
-    xdata = np.array(list(range(-len(ydata), 0))) + 1
-
-    popt, pcov = curve_fit(logistic_derivative, xdata, ydata, p0=[20000, 0.5, 1], bounds=([0, 0, -100], [200000, 10, 100]))
-
-    print(title)
-    print('    fit: L=%5.3f, k=%5.3f, x0=%5.3f' % tuple(popt))
-
-    perr = np.sqrt(np.diag(pcov))
-    print(perr)
-
-    pworst = popt + coeff_std_d*perr
-    pbest = popt - coeff_std_d*perr
-
-    fig, ax = plt.subplots(figsize=(15,8))
-
-    ax.xaxis.set_major_formatter(myFmt)
-    fig.autofmt_xdate()
-
-    total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
-
-    date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
-    date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
-
-    ax.plot(date_total_xaxis, logistic_derivative(total_xaxis, *popt), 'g-', label='prediction')
-    ax.plot(date_xdata, ydata, 'b-', label='real data')
-
-    # popt, pcov = curve_fit(logistic_derivative, xdata[:-4], ydata[:-4], p0=[20000, 0.5, 1], bounds=([0, 0, -100], [200000, 10, 100]))
-    # ax.plot(date_total_xaxis, logistic_derivative(total_xaxis, *popt), 'r-', label='old prediction')
-
-    future_axis = total_xaxis[len(ydata) - days_past:]
-    date_future_axis = [last_date + timedelta(days=int(i)) for i in future_axis]
-    ax.fill_between(date_future_axis, logistic_derivative(future_axis, *pbest), logistic_derivative(future_axis, *pworst), 
-        facecolor='red', alpha=0.2, label='std')
-
-    start = (len(ydata) - days_past - 1) % show_every
-    ax.set_xticks(date_total_xaxis[start::show_every])
-
-    ax.set_xlabel('Giorni - date')
-    ax.set_ylabel(ylabel)
-    ax.set_title(title + ' - ' + str(last_date.strftime("%d-%m-%Y")))
-    ax.legend(loc='upper left')
-    ax.grid(True)
-    
-    if do_imgs:
-        plt.savefig('imgs/' + title + '.png', dpi=200)
-        plt.clf()
-    else:
-        plt.show()
+    return popt, perr
 
 if os.path.exists('data.csv'):
     os.remove('data.csv')
 
 url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'
-try:
-    file = wget.download(url, out='data.csv')
-    print("\n")
-except:
-    print("BAD", url)
+webFile = url_request.urlopen(url).read()
+webFile = webFile.decode('utf-8')  
 
-data = pd.read_csv('data.csv')
+data = pd.read_csv(StringIO(webFile))
 
 date_string = data.iloc[-1:]['data'].values[0]
 last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
 
+tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
+print('Tot tamponi: {}'.format(tot_tamponi))
+
 ydata = data['totale_casi'].tolist()
-fit_logistic(ydata, 'Contagi', 'totale contagiati', last_date)
+p_cont, err_cont = fit_curve(logistic, ydata, 'Contagi', 'totale contagiati', last_date, coeff_std)
 
 ydata = data['deceduti'].tolist()
-fit_logistic(ydata, 'Deceduti', 'totale deceduti', last_date)
+p_dead, err_dead = fit_curve(logistic, ydata, 'Deceduti', 'totale deceduti', last_date, coeff_std)
 
 ydata = data['ricoverati_con_sintomi'].tolist()
-fit_logistic(ydata, 'Ricoverati', 'totale ricoverati', last_date)
+fit_curve(logistic, ydata, 'Ricoverati', 'totale ricoverati', last_date, coeff_std)
 
 ydata = data['terapia_intensiva'].tolist()
-fit_logistic(ydata, 'Terapia Intensiva', 'totale in terapia', last_date)
+fit_curve(logistic, ydata, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std)
+
+ydata = data['dimessi_guariti'].tolist()
+p_healed, err_healed = fit_curve(logistic, ydata, 'Dimessi Guariti', 'totale dimessi guariti', last_date, 0.5)
 
 ydata = data['nuovi_attualmente_positivi'].tolist()
-fit_logistic_derivative(ydata, 'Nuovi contagiati', 'nuovi contagiati', last_date)
+fit_curve(logistic_derivative, ydata, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d)
 
