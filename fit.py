@@ -129,53 +129,62 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std):
 
     return popt, perr
 
-if os.path.exists('data.csv'):
-    os.remove('data.csv')
+if __name__ == '__main__':
+    if os.path.exists('data.csv'):
+        os.remove('data.csv')
 
-url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'
-webFile = url_request.urlopen(url).read()
-webFile = webFile.decode('utf-8')  
+    url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'
+    webFile = url_request.urlopen(url).read()
+    webFile = webFile.decode('utf-8')  
 
-data = pd.read_csv(StringIO(webFile))
+    data = pd.read_csv(StringIO(webFile))
 
-date_string = data.iloc[-1:]['data'].values[0]
-last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
-print("Ultimo aggiornamento: {}".format(last_date))
+    date_string = data.iloc[-1:]['data'].values[0]
+    last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+    print("Ultimo aggiornamento: {}".format(last_date))
 
-totale_casi = data.iloc[-1:]['totale_casi'].values[0]
-print('Tot contagiati: {}'.format(totale_casi))
+    totale_casi = data.iloc[-1:]['totale_casi'].values[0]
+    print('Tot contagiati: {}'.format(totale_casi))
 
-totale_dimessi_guariti = data.iloc[-1:]['dimessi_guariti'].values[0]
-print('Tot dimessi guariti: {}'.format(totale_dimessi_guariti))
+    totale_dimessi_guariti = data.iloc[-1:]['dimessi_guariti'].values[0]
+    print('Tot dimessi guariti: {}'.format(totale_dimessi_guariti))
 
-totale_deceduti = data.iloc[-1:]['deceduti'].values[0]
-print('Tot deceduti: {}'.format(totale_deceduti))
+    totale_deceduti = data.iloc[-1:]['deceduti'].values[0]
+    print('Tot deceduti: {}'.format(totale_deceduti))
 
-tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
-print('Tot tamponi: {}'.format(tot_tamponi))
+    tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
+    print('Tot tamponi: {}'.format(tot_tamponi))
 
-nuovi_oggi = data.iloc[-1:]['nuovi_attualmente_positivi'].values[0]
-print('Tot Nuovi casi oggi: {}'.format(nuovi_oggi))
+    nuovi = np.array(data['nuovi_attualmente_positivi'].tolist())
 
-nuovi_ieri = data.iloc[-2:]['nuovi_attualmente_positivi'].values[0]
-growth_factor = nuovi_oggi/float(nuovi_ieri)
-print('Fattore di crescita: {:.3f}'.format(growth_factor))
+    nuovi_oggi = nuovi[-1]
+    print('Tot Nuovi casi oggi: {}'.format(nuovi_oggi))
 
-ydata = data['totale_casi'].tolist()
-p_cont, err_cont = fit_curve(logistic, ydata, 'Contagi', 'totale contagiati', last_date, coeff_std)
+    gf_list = nuovi[1:] / nuovi[:-1]
 
-ydata = data['deceduti'].tolist()
-p_dead, err_dead = fit_curve(logistic, ydata, 'Deceduti', 'totale deceduti', last_date, coeff_std)
+    growth_factor = gf_list[-1]
+    print('Fattore di crescita: {:.3f}'.format(growth_factor))
 
-ydata = data['ricoverati_con_sintomi'].tolist()
-fit_curve(logistic, ydata, 'Ricoverati', 'totale ricoverati', last_date, coeff_std)
+    avg_growth_factor = np.mean(gf_list[-3:])
+    print('Fattore di crescita mediato: {:.3f}'.format(avg_growth_factor))
 
-ydata = data['terapia_intensiva'].tolist()
-fit_curve(logistic, ydata, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std)
+    print(gf_list)
 
-ydata = data['dimessi_guariti'].tolist()
-p_healed, err_healed = fit_curve(logistic, ydata, 'Dimessi Guariti', 'totale dimessi guariti', last_date, 0.3)
+    ydata = data['totale_casi'].tolist()
+    p_cont, err_cont = fit_curve(logistic, ydata, 'Contagi', 'totale contagiati', last_date, coeff_std)
 
-ydata = data['nuovi_attualmente_positivi'].tolist()
-fit_curve(logistic_derivative, ydata, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d)
+    ydata = data['deceduti'].tolist()
+    p_dead, err_dead = fit_curve(logistic, ydata, 'Deceduti', 'totale deceduti', last_date, coeff_std)
+
+    ydata = data['ricoverati_con_sintomi'].tolist()
+    fit_curve(logistic, ydata, 'Ricoverati', 'totale ricoverati', last_date, coeff_std)
+
+    ydata = data['terapia_intensiva'].tolist()
+    fit_curve(logistic, ydata, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std)
+
+    ydata = data['dimessi_guariti'].tolist()
+    p_healed, err_healed = fit_curve(logistic, ydata, 'Dimessi Guariti', 'totale dimessi guariti', last_date, 0.3)
+
+    ydata = data['nuovi_attualmente_positivi'].tolist()
+    fit_curve(logistic_derivative, ydata, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d)
 
