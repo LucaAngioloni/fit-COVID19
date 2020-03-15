@@ -141,6 +141,18 @@ data = pd.read_csv(StringIO(webFile))
 date_string = data.iloc[-1:]['data'].values[0]
 last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
 
+totale_casi = data.iloc[-1:]['totale_casi'].values[0]
+print('Tot contagiati: {}'.format(totale_casi))
+
+totale_dimessi_guariti = data.iloc[-1:]['dimessi_guariti'].values[0]
+print('Tot dimessi guariti: {}'.format(totale_dimessi_guariti))
+
+totale_deceduti = data.iloc[-1:]['deceduti'].values[0]
+print('Tot deceduti: {}'.format(totale_deceduti))
+
+tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
+print('Tot tamponi: {}'.format(tot_tamponi))
+
 tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
 print('Tot tamponi: {}'.format(tot_tamponi))
 
