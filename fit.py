@@ -140,6 +140,7 @@ data = pd.read_csv(StringIO(webFile))
 
 date_string = data.iloc[-1:]['data'].values[0]
 last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+print("Ultimo aggiornamento: {}".format(last_date))
 
 totale_casi = data.iloc[-1:]['totale_casi'].values[0]
 print('Tot contagiati: {}'.format(totale_casi))
@@ -153,8 +154,12 @@ print('Tot deceduti: {}'.format(totale_deceduti))
 tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
 print('Tot tamponi: {}'.format(tot_tamponi))
 
-tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
-print('Tot tamponi: {}'.format(tot_tamponi))
+nuovi_oggi = data.iloc[-1:]['nuovi_attualmente_positivi'].values[0]
+print('Tot Nuovi casi oggi: {}'.format(nuovi_oggi))
+
+nuovi_ieri = data.iloc[-2:]['nuovi_attualmente_positivi'].values[0]
+growth_factor = nuovi_oggi/float(nuovi_ieri)
+print('Fattore di crescita: {:.3f}'.format(growth_factor))
 
 ydata = data['totale_casi'].tolist()
 p_cont, err_cont = fit_curve(logistic, ydata, 'Contagi', 'totale contagiati', last_date, coeff_std)
