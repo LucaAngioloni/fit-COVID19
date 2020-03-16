@@ -32,7 +32,7 @@ myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
 show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
 
 coeff_std = 1.1 # coefficient that defines how many standard deviations to use
-coeff_std_d = 0.2
+coeff_std_d = 0.4
 
 def logistic(x, L, k, x0, y0):
     """
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     fit_curve(logistic, ydata, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std)
 
     ydata = data['dimessi_guariti'].tolist()
-    p_healed, err_healed = fit_curve(logistic, ydata, 'Dimessi Guariti', 'totale dimessi guariti', last_date, 0.3)
+    p_healed, err_healed = fit_curve(logistic, ydata, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d)
 
     ydata = data['nuovi_attualmente_positivi'].tolist()
     fit_curve(logistic_derivative, ydata, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d)
