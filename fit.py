@@ -31,8 +31,8 @@ days_future = 50 # days after the end of the data to predict and plot
 myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
 show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
 
-coeff_std = 1.1 # coefficient that defines how many standard deviations to use
-coeff_std_d = 0.4
+coeff_std = 1.2 # coefficient that defines how many standard deviations to use
+coeff_std_d = 0.5
 
 def logistic(x, L, k, x0, y0):
     """
@@ -139,23 +139,33 @@ if __name__ == '__main__':
 
     data = pd.read_csv(StringIO(webFile))
 
+    totale_casi = data['totale_casi'].tolist()
+    deceduti = data['deceduti'].tolist()
+    ricoverati_con_sintomi = data['ricoverati_con_sintomi'].tolist()
+    terapia_intensiva = data['terapia_intensiva'].tolist()
+    dimessi_guariti = data['dimessi_guariti'].tolist()
+    nuovi_attualmente_positivi = data['nuovi_attualmente_positivi'].tolist()
+
     date_string = data.iloc[-1:]['data'].values[0]
     last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
     print("Ultimo aggiornamento: {}".format(last_date))
 
-    totale_casi = data.iloc[-1:]['totale_casi'].values[0]
-    print('Tot contagiati: {}'.format(totale_casi))
+    totale_casi_oggi = totale_casi[-1]
+    print('Tot contagiati: {}'.format(totale_casi_oggi))
 
-    totale_dimessi_guariti = data.iloc[-1:]['dimessi_guariti'].values[0]
-    print('Tot dimessi guariti: {}'.format(totale_dimessi_guariti))
+    totale_guariti = dimessi_guariti[-1]
+    print('Tot dimessi guariti: {}'.format(totale_guariti))
 
-    totale_deceduti = data.iloc[-1:]['deceduti'].values[0]
+    totale_deceduti = deceduti[-1]
     print('Tot deceduti: {}'.format(totale_deceduti))
+
+    print('Tot attualmente positivi: {}'.format(totale_casi_oggi - totale_deceduti - totale_guariti))
 
     tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
     print('Tot tamponi: {}'.format(tot_tamponi))
 
-    nuovi = np.array(data['nuovi_attualmente_positivi'].tolist())
+    totale_casi = np.array(totale_casi)
+    nuovi = totale_casi[1:] - totale_casi[:-1]
 
     nuovi_oggi = nuovi[-1]
     print('Tot Nuovi casi oggi: {}'.format(nuovi_oggi))
@@ -170,21 +180,15 @@ if __name__ == '__main__':
 
     print(gf_list)
 
-    ydata = data['totale_casi'].tolist()
-    p_cont, err_cont = fit_curve(logistic, ydata, 'Contagi', 'totale contagiati', last_date, coeff_std)
+    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std)
 
-    ydata = data['deceduti'].tolist()
-    p_dead, err_dead = fit_curve(logistic, ydata, 'Deceduti', 'totale deceduti', last_date, coeff_std)
+    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std)
 
-    ydata = data['ricoverati_con_sintomi'].tolist()
-    fit_curve(logistic, ydata, 'Ricoverati', 'totale ricoverati', last_date, coeff_std)
+    p_hosp, err_hosp = fit_curve(logistic, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std)
 
-    ydata = data['terapia_intensiva'].tolist()
-    fit_curve(logistic, ydata, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std)
+    p_intens, err_intens = fit_curve(logistic, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std)
 
-    ydata = data['dimessi_guariti'].tolist()
-    p_healed, err_healed = fit_curve(logistic, ydata, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d)
-
-    ydata = data['nuovi_attualmente_positivi'].tolist()
-    fit_curve(logistic_derivative, ydata, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d)
+    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d)
+    
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d)
 
