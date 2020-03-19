@@ -123,7 +123,7 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(
-        description='Modello COVID-19 per regione.')
+        description='Modello COVID-19 in Italia.')
     parser.add_argument(
         '--img',
         type=str,
