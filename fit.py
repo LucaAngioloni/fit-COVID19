@@ -142,11 +142,15 @@ if __name__ == '__main__':
         import matplotlib.pyplot as plt
         import matplotlib.dates as mdates
 
+    # Download and read data -----------------------------------
+
     url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'
     webFile = url_request.urlopen(url).read()
     webFile = webFile.decode('utf-8')  
 
     data = pd.read_csv(StringIO(webFile))
+
+    # Parse data and compute time series -----------------------
 
     totale_casi = data['totale_casi'].tolist()
     deceduti = data['deceduti'].tolist()
@@ -154,6 +158,19 @@ if __name__ == '__main__':
     terapia_intensiva = data['terapia_intensiva'].tolist()
     dimessi_guariti = data['dimessi_guariti'].tolist()
     nuovi_attualmente_positivi = data['nuovi_attualmente_positivi'].tolist()
+
+    totale_casi = np.array(totale_casi)
+    nuovi = totale_casi[1:] - totale_casi[:-1]
+
+    deceduti = np.array(deceduti)
+    nuovi_deceduti = deceduti[1:] - deceduti[:-1]
+
+    dimessi_guariti = np.array(dimessi_guariti)
+    nuovi_guariti = dimessi_guariti[1:] - dimessi_guariti[:-1]
+
+    gf_list = nuovi[1:] / nuovi[:-1]
+
+    # Print stats ---------------------------------------------
 
     date_string = data.iloc[-1:]['data'].values[0]
     last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
@@ -170,16 +187,17 @@ if __name__ == '__main__':
 
     print('Tot attualmente positivi: {}'.format(totale_casi_oggi - totale_deceduti - totale_guariti))
 
-    tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
-    print('Tot tamponi: {}'.format(tot_tamponi))
-
-    totale_casi = np.array(totale_casi)
-    nuovi = totale_casi[1:] - totale_casi[:-1]
-
     nuovi_oggi = nuovi[-1]
     print('Tot Nuovi casi oggi: {}'.format(nuovi_oggi))
 
-    gf_list = nuovi[1:] / nuovi[:-1]
+    decessi_oggi = nuovi_deceduti[-1]
+    print('Tot Nuovi decessi oggi: {}'.format(decessi_oggi))
+
+    guariti_oggi = nuovi_guariti[-1]
+    print('Tot Nuovi guariti oggi: {}'.format(guariti_oggi))
+
+    tot_tamponi = data.iloc[-1:]['tamponi'].values[0]
+    print('Tot tamponi: {}'.format(tot_tamponi))
 
     growth_factor = gf_list[-1]
     print('Fattore di crescita: {:.3f}'.format(growth_factor))
@@ -188,6 +206,8 @@ if __name__ == '__main__':
     print('Fattore di crescita mediato: {:.3f}'.format(avg_growth_factor))
 
     print(gf_list)
+
+    # Fit curves and generate plots ---------------------------------
 
     p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, do_imgs)
 
