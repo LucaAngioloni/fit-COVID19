@@ -99,7 +99,8 @@ if __name__ == '__main__':
     totale_deceduti = deceduti[-1]
     print('Tot deceduti: {}'.format(totale_deceduti))
 
-    print('Tot attualmente positivi: {}'.format(totale_casi_oggi - totale_deceduti - totale_guariti))
+    totale_positivi = totale_casi_oggi - totale_deceduti - totale_guariti
+    print('Tot attualmente positivi: {}'.format(totale_positivi))
 
     nuovi_oggi = nuovi[-1]
     print('Tot Nuovi casi oggi: {}'.format(nuovi_oggi))
