@@ -22,8 +22,8 @@ days_future = 50 # days after the end of the data to predict and plot
 myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
 show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
 
-coeff_std = 1.2 # coefficient that defines how many standard deviations to use
-coeff_std_d = 0.5
+coeff_std = 1.5 # coefficient that defines how many standard deviations to use
+coeff_std_d = 0.8
 
 def logistic(x, L, k, x0, y0):
     """
@@ -173,7 +173,9 @@ if __name__ == '__main__':
     # Print stats ---------------------------------------------
 
     date_string = data.iloc[-1:]['data'].values[0]
-    last_date = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+    # date_format = "%Y-%m-%d %H:%M:%S" # Old date format (changed 25/03/2020)
+    date_format = "%Y-%m-%dT%H:%M:%S"
+    last_date = datetime.strptime(date_string, date_format)
     print("Ultimo aggiornamento: {}".format(last_date))
 
     totale_casi_oggi = totale_casi[-1]
