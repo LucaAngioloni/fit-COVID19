@@ -84,6 +84,12 @@ if __name__ == '__main__':
 
     gf_list = nuovi[1:] / nuovi[:-1]
 
+    ricoverati_con_sintomi = np.array(ricoverati_con_sintomi)
+    nuovi_ricoverati = ricoverati_con_sintomi[1:] - ricoverati_con_sintomi[:-1]
+
+    terapia_intensiva = np.array(terapia_intensiva)
+    nuovi_terapia_intensiva = terapia_intensiva[1:] - terapia_intensiva[:-1]
+
     # Print stats ---------------------------------------------
 
     date_string = data.iloc[-1:]['data'].values[0]
@@ -128,12 +134,24 @@ if __name__ == '__main__':
 
     p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, do_imgs)
 
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, do_imgs)
+
+
     p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, do_imgs)
+
+    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, do_imgs)
+
 
     p_hosp, err_hosp = fit_curve(logistic, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
 
+    fit_curve(logistic_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
+
+
     p_intens, err_intens = fit_curve(logistic, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
+
+    fit_curve(logistic_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
+
 
     p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, do_imgs)
     
-    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, do_imgs)

@@ -157,7 +157,7 @@ if __name__ == '__main__':
     ricoverati_con_sintomi = data['ricoverati_con_sintomi'].tolist()
     terapia_intensiva = data['terapia_intensiva'].tolist()
     dimessi_guariti = data['dimessi_guariti'].tolist()
-    nuovi_attualmente_positivi = data['nuovi_attualmente_positivi'].tolist()
+    # nuovi_attualmente_positivi = data['nuovi_attualmente_positivi'].tolist()
 
     totale_casi = np.array(totale_casi)
     nuovi = totale_casi[1:] - totale_casi[:-1]
@@ -169,6 +169,12 @@ if __name__ == '__main__':
     nuovi_guariti = dimessi_guariti[1:] - dimessi_guariti[:-1]
 
     gf_list = nuovi[1:] / nuovi[:-1]
+
+    ricoverati_con_sintomi = np.array(ricoverati_con_sintomi)
+    nuovi_ricoverati = ricoverati_con_sintomi[1:] - ricoverati_con_sintomi[:-1]
+
+    terapia_intensiva = np.array(terapia_intensiva)
+    nuovi_terapia_intensiva = terapia_intensiva[1:] - terapia_intensiva[:-1]
 
     # Print stats ---------------------------------------------
 
@@ -214,13 +220,26 @@ if __name__ == '__main__':
 
     p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, do_imgs)
 
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, do_imgs)
+
+
     p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, do_imgs)
+
+    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, do_imgs)
+
 
     p_hosp, err_hosp = fit_curve(logistic, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
 
+    fit_curve(logistic_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
+
+
     p_intens, err_intens = fit_curve(logistic, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
+
+    fit_curve(logistic_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
+
 
     p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, do_imgs)
     
-    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, do_imgs)
+
 
