@@ -17,13 +17,13 @@ from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
 days_past = -2 # days beyond the start of the data to plot
-days_future = 50 # days after the end of the data to predict and plot
+days_future = 40 # days after the end of the data to predict and plot
 
 myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
 show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
 
-coeff_std = 1.5 # coefficient that defines how many standard deviations to use
-coeff_std_d = 0.5
+coeff_std = 3.5 # coefficient that defines how many standard deviations to use
+coeff_std_d = 1.5
 
 from fit import logistic, logistic_derivative, fit_curve
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     ricoverati_con_sintomi = data['ricoverati_con_sintomi'].tolist()
     terapia_intensiva = data['terapia_intensiva'].tolist()
     dimessi_guariti = data['dimessi_guariti'].tolist()
-    nuovi_attualmente_positivi = data['nuovi_attualmente_positivi'].tolist()
+    # nuovi_positivi = data['nuovi_positivi'].tolist()
 
     totale_casi = np.array(totale_casi)
     nuovi = totale_casi[1:] - totale_casi[:-1]
