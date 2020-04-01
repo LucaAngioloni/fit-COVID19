@@ -6,7 +6,12 @@ Data is taken from [this official repo](https://github.com/pcm-dpc/COVID-19)
 Live demo: https://fit-covid19.herokuapp.com
 (It could be slow because it is a free heroku app)
 
-Predictions for Italy:
+For single regions:
+https://fit-covid19.herokuapp.com/regione/nome
+
+(Ex. Toscana: https://fit-covid19.herokuapp.com/regione/Toscana)
+
+## Predictions for Italy:
 ```bash
 usage: fit.py [-h] [--img IMG]
 
@@ -17,7 +22,7 @@ optional arguments:
   --img IMG   y, save imgs - n do not save imgs
  ```
 
-Predictions for a region:
+## Predictions for a region:
 ```bash
 usage: regione_fit.py [-h] --regione REGIONE [--img IMG]
 
@@ -29,8 +34,10 @@ optional arguments:
   --img IMG          y, save imgs - n do not save imgs
 ```
 
-![Totale contagi](https://fit-covid19.herokuapp.com/imgs/Contagi.png?rel=true "Totale contagi")
-![Contagi giornalieri](https://fit-covid19.herokuapp.com/imgs/Nuovi%20Contagiati.png?rel=true "Contagi giornalieri")
+## Examples
+![Totale contagi](https://fit-covid19.herokuapp.com/imgs/Contagi.png?relo=true "Totale contagi")
+![Contagi giornalieri](https://fit-covid19.herokuapp.com/imgs/Nuovi%20Contagiati.png?relo=true "Contagi giornalieri")
+
 
 If you know this stuff and you think you can contribute please just let me know: fork this repo, pull request, star this repo, send me an email.
 
