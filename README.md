@@ -35,8 +35,8 @@ optional arguments:
 ```
 
 ## Examples
-![Totale contagi](https://fit-covid19.herokuapp.com/imgs/Contagi.png?relo=true "Totale contagi")
-![Contagi giornalieri](https://fit-covid19.herokuapp.com/imgs/Nuovi%20Contagiati.png?relo=true "Contagi giornalieri")
+![Totale contagi](https://fit-covid19.herokuapp.com/imgs/Contagi.png?reloa=true "Totale contagi")
+![Contagi giornalieri](https://fit-covid19.herokuapp.com/imgs/Nuovi%20Contagiati.png?reloa=true "Contagi giornalieri")
 
 
 If you know this stuff and you think you can contribute please just let me know: fork this repo, pull request, star this repo, send me an email.
