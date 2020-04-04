@@ -52,16 +52,23 @@ def logistic_derivative(x, L, k, x0):
     y = k * L * (np.exp(-k*(x-x0))) / np.power(1 + np.exp(-k*(x-x0)), 2)
     return y
 
+def logistic_2_ord_derivative(x, L, k, x0):
+    """
+    General Gaussian like derivative function (derivative of the logistic derivative).
+    """
+    y = (k**2 * L * np.exp(k*(x+x0)) * (np.exp(k*x0) - np.exp(k*x))) / np.power(np.exp(k*x) + np.exp(k*x0), 3)
+    return y
+
 def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
     if curve.__name__ == 'logistic':
-        p0=[20000, 0.5, 1, 0]
-        bounds=([0, 0, -100, 0], [200000, 10, 100, 1])
+        p0=[50000, 0.5, 1, 0]
+        bounds=([1000, 0, -100, 0], [10000000, 30, 100, 1])
         params_names = ['L', 'k', 'x0', 'y0']
-    elif curve.__name__ == 'logistic_derivative':
-        p0=[20000, 0.5, 1]
-        bounds=([0, 0, -100], [200000, 10, 100])
+    elif curve.__name__ == 'logistic_derivative' or curve.__name__ == 'logistic_2_ord_derivative':
+        p0=[50000, 0.5, 1]
+        bounds=([1000, 0, -100], [10000000, 30, 100])
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
@@ -176,6 +183,8 @@ if __name__ == '__main__':
     terapia_intensiva = np.array(terapia_intensiva)
     nuovi_terapia_intensiva = terapia_intensiva[1:] - terapia_intensiva[:-1]
 
+    totale_attualmente_positivi = totale_casi - deceduti - dimessi_guariti
+
     # Print stats ---------------------------------------------
 
     date_string = data.iloc[-1:]['data'].values[0]
@@ -193,7 +202,7 @@ if __name__ == '__main__':
     totale_deceduti = deceduti[-1]
     print('Tot deceduti: {}'.format(totale_deceduti))
 
-    totale_positivi = totale_casi_oggi - totale_deceduti - totale_guariti
+    totale_positivi = totale_attualmente_positivi[-1]
     print('Tot attualmente positivi: {}'.format(totale_positivi))
 
     nuovi_oggi = nuovi[-1]
@@ -233,9 +242,9 @@ if __name__ == '__main__':
     fit_curve(logistic_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
 
 
-    p_intens, err_intens = fit_curve(logistic, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
+    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
 
-    fit_curve(logistic_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
 
 
     p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, do_imgs)
@@ -243,3 +252,4 @@ if __name__ == '__main__':
     fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, do_imgs)
 
 
+    fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs)
