@@ -25,7 +25,7 @@ show_every = 3 # int value that defines how often to show a date in the x axis. 
 coeff_std = 3.5 # coefficient that defines how many standard deviations to use
 coeff_std_d = 1.5
 
-from fit import logistic, logistic_derivative, fit_curve
+from fit import logistic, logistic_derivative, logistic_2_ord_derivative, fit_curve
 
 if __name__ == '__main__':
     import argparse
@@ -90,6 +90,8 @@ if __name__ == '__main__':
     terapia_intensiva = np.array(terapia_intensiva)
     nuovi_terapia_intensiva = terapia_intensiva[1:] - terapia_intensiva[:-1]
 
+    totale_attualmente_positivi = totale_casi - deceduti - dimessi_guariti
+
     # Print stats ---------------------------------------------
 
     date_string = data.iloc[-1:]['data'].values[0]
@@ -107,7 +109,7 @@ if __name__ == '__main__':
     totale_deceduti = deceduti[-1]
     print('Tot deceduti: {}'.format(totale_deceduti))
 
-    totale_positivi = totale_casi_oggi - totale_deceduti - totale_guariti
+    totale_positivi = totale_attualmente_positivi[-1]
     print('Tot attualmente positivi: {}'.format(totale_positivi))
 
     nuovi_oggi = nuovi[-1]
@@ -142,16 +144,20 @@ if __name__ == '__main__':
     fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, do_imgs)
 
 
-    p_hosp, err_hosp = fit_curve(logistic, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
+    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
 
-    fit_curve(logistic_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
 
 
-    p_intens, err_intens = fit_curve(logistic, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
+    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
 
-    fit_curve(logistic_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
 
 
     p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, do_imgs)
     
     fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, do_imgs)
+
+
+    # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs)
+

@@ -63,12 +63,12 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
     if curve.__name__ == 'logistic':
-        p0=[50000, 0.5, 1, 0]
-        bounds=([1000, 0, -100, 0], [10000000, 30, 100, 1])
+        p0=[20000, 0.5, 1, 0]
+        bounds=([10, 0, -100, 0], [1000000, 10, 100, 1])
         params_names = ['L', 'k', 'x0', 'y0']
     elif curve.__name__ == 'logistic_derivative' or curve.__name__ == 'logistic_2_ord_derivative':
-        p0=[50000, 0.5, 1]
-        bounds=([1000, 0, -100], [10000000, 30, 100])
+        p0=[20000, 0.5, 1]
+        bounds=([10, 0, -100], [1000000, 10, 100])
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
@@ -237,9 +237,9 @@ if __name__ == '__main__':
     fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, do_imgs)
 
 
-    p_hosp, err_hosp = fit_curve(logistic, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
+    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
 
-    fit_curve(logistic_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
 
 
     p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
@@ -252,4 +252,4 @@ if __name__ == '__main__':
     fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, do_imgs)
 
 
-    fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs)
+    # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs)
