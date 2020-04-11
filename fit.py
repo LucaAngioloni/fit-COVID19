@@ -127,6 +127,25 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
 
     return popt, perr
 
+def plot_data(ydata, ylabel, title, last_date, do_imgs):
+    fig, ax = plt.subplots(figsize=(15,8))
+    ax.xaxis.set_major_formatter(myFmt)
+    fig.autofmt_xdate()
+    xdata = np.array(list(range(-len(ydata), 0))) + 1
+    date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
+    ax.plot(date_xdata, ydata, 'b-', label='real data')
+
+    ax.set_xlabel('Giorni - date')
+    ax.set_ylabel(ylabel)
+    ax.set_title(title + ' - ' + str(last_date.strftime("%d-%m-%Y")))
+    ax.legend(loc='upper left')
+    ax.grid(True)
+    if do_imgs:
+        plt.savefig('imgs/' + title + '.png', dpi=200)
+        plt.clf()
+    else:
+        plt.show()
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(
@@ -165,6 +184,7 @@ if __name__ == '__main__':
     terapia_intensiva = data['terapia_intensiva'].tolist()
     dimessi_guariti = data['dimessi_guariti'].tolist()
     # nuovi_positivi = data['nuovi_positivi'].tolist()
+    tamponi_totali = np.array(data['tamponi'].tolist())
 
     totale_casi = np.array(totale_casi)
     nuovi = totale_casi[1:] - totale_casi[:-1]
@@ -184,6 +204,8 @@ if __name__ == '__main__':
     nuovi_terapia_intensiva = terapia_intensiva[1:] - terapia_intensiva[:-1]
 
     totale_attualmente_positivi = totale_casi - deceduti - dimessi_guariti
+
+    nuovi_tamponi = tamponi_totali[1:] - tamponi_totali[:-1]
 
     # Print stats ---------------------------------------------
 
@@ -253,3 +275,12 @@ if __name__ == '__main__':
 
 
     # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs)
+
+
+    # Plot number of tests and % of positives --------------------------
+
+    plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, do_imgs)
+
+    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, do_imgs)
+    
+

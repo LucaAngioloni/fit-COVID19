@@ -25,7 +25,7 @@ show_every = 3 # int value that defines how often to show a date in the x axis. 
 coeff_std = 3.5 # coefficient that defines how many standard deviations to use
 coeff_std_d = 1.5
 
-from fit import logistic, logistic_derivative, logistic_2_ord_derivative, fit_curve
+from fit import logistic, logistic_derivative, logistic_2_ord_derivative, fit_curve, plot_data
 
 if __name__ == '__main__':
     import argparse
@@ -72,6 +72,7 @@ if __name__ == '__main__':
     terapia_intensiva = data['terapia_intensiva'].tolist()
     dimessi_guariti = data['dimessi_guariti'].tolist()
     # nuovi_positivi = data['nuovi_positivi'].tolist()
+    tamponi_totali = np.array(data['tamponi'].tolist())
 
     totale_casi = np.array(totale_casi)
     nuovi = totale_casi[1:] - totale_casi[:-1]
@@ -91,6 +92,8 @@ if __name__ == '__main__':
     nuovi_terapia_intensiva = terapia_intensiva[1:] - terapia_intensiva[:-1]
 
     totale_attualmente_positivi = totale_casi - deceduti - dimessi_guariti
+
+    nuovi_tamponi = tamponi_totali[1:] - tamponi_totali[:-1]
 
     # Print stats ---------------------------------------------
 
@@ -161,3 +164,9 @@ if __name__ == '__main__':
 
     # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs)
 
+
+    # Plot number of tests and % of positives --------------------------
+
+    plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, do_imgs)
+
+    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, do_imgs)
