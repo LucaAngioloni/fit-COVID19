@@ -72,7 +72,7 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
         params_names = ['L', 'k', 'x0']
     elif curve.__name__ == 'logistic_2_ord_derivative':
         p0=[20000, 0.5, 1]
-        bounds=([10, 0, -50], [200000, 15, 50])
+        bounds=([10, 0, -100], [1000000, 10, 100])
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
