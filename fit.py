@@ -66,15 +66,19 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
         p0=[20000, 0.5, 1, 0]
         bounds=([10, 0, -100, 0], [1000000, 10, 100, 1])
         params_names = ['L', 'k', 'x0', 'y0']
-    elif curve.__name__ == 'logistic_derivative' or curve.__name__ == 'logistic_2_ord_derivative':
+    elif curve.__name__ == 'logistic_derivative':
         p0=[20000, 0.5, 1]
         bounds=([10, 0, -100], [1000000, 10, 100])
+        params_names = ['L', 'k', 'x0']
+    elif curve.__name__ == 'logistic_2_ord_derivative':
+        p0=[20000, 0.5, 1]
+        bounds=([10, 0, -50], [200000, 15, 50])
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
         return -1
 
-    popt, pcov = curve_fit(curve, xdata, ydata, p0=p0, bounds=bounds)
+    popt, pcov = curve_fit(curve, xdata, ydata, p0=p0, bounds=bounds, maxfev=5000)
 
     print(title)
     descr = '    fit: '
