@@ -22,8 +22,8 @@ days_future = 40 # days after the end of the data to predict and plot
 myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
 show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
 
-coeff_std = 3.5 # coefficient that defines how many standard deviations to use
-coeff_std_d = 1.5
+coeff_std = 4 # coefficient that defines how many standard deviations to use
+coeff_std_d = 2
 
 def logistic(x, L, k, x0, y0):
     """
@@ -63,16 +63,16 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
     if curve.__name__ == 'logistic':
-        p0=[20000, 0.5, 1, 0]
-        bounds=([10, 0, -100, 0], [1000000, 10, 100, 1])
+        p0=[100000, 0.5, 1, 0]
+        bounds=([10, 0.1, -100, 0], [1000000, 10, 100, 1])
         params_names = ['L', 'k', 'x0', 'y0']
     elif curve.__name__ == 'logistic_derivative':
-        p0=[20000, 0.5, 1]
-        bounds=([10, 0, -100], [1000000, 10, 100])
+        p0=[100000, 0.5, 1]
+        bounds=([10, 0.1, -100], [1000000, 10, 100])
         params_names = ['L', 'k', 'x0']
     elif curve.__name__ == 'logistic_2_ord_derivative':
-        p0=[20000, 0.5, 1]
-        bounds=([10, 0, -100], [1000000, 10, 100])
+        p0=[5000, 0.8, 0]
+        bounds=([1000, 0.1, -50], [1000000, 2, 50])
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
