@@ -17,7 +17,7 @@ from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
 days_past = -2 # days beyond the start of the data to plot
-days_future = 40 # days after the end of the data to predict and plot
+days_future = 50 # days after the end of the data to predict and plot
 
 myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
 show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
@@ -59,26 +59,51 @@ def logistic_2_ord_derivative(x, L, k, x0):
     y = (k**2 * L * np.exp(k*(x+x0)) * (np.exp(k*x0) - np.exp(k*x))) / np.power(np.exp(k*x) + np.exp(k*x0), 3)
     return y
 
-def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
+
+def moving_average(x, w):
+    """
+    Moving average function that takes an imput x and computes the average with the last w elements.
+
+    Args:
+        x    array-like, the input time series
+        w    int, the window size for the avg
+    """
+    return np.convolve(x, np.ones(w), 'valid') / w
+
+def check_style(style):
+    if style == 'cyberpunk':
+        try:
+            global mplcyberpunk
+            import mplcyberpunk
+            plt.style.use("cyberpunk")
+        except:
+            style = 'normal'
+            print("You need to have mplcyberpunk installed to use the cyberpunk style:")
+            print("    pip install mplcyberpunk")
+    return style
+
+def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=False, style='normal'):
+    style = check_style(style)
+
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
     if curve.__name__ == 'logistic':
         p0=[100000, 0.5, 1, 0]
-        bounds=([10, 0.1, -100, 0], [1000000, 10, 100, 1])
+        bounds=(-np.inf, np.inf) #([10, 0.1, -100, 0], [1000000, 10, 100, 1])
         params_names = ['L', 'k', 'x0', 'y0']
     elif curve.__name__ == 'logistic_derivative':
-        p0=[100000, 0.5, 1]
-        bounds=([10, 0.1, -100], [1000000, 10, 100])
+        p0=None #[100000, 0.5, 1]
+        bounds=(-np.inf, np.inf) #([10, 0.1, -100], [1000000, 10, 100])
         params_names = ['L', 'k', 'x0']
     elif curve.__name__ == 'logistic_2_ord_derivative':
-        p0=[5000, 0.8, 0]
-        bounds=([1000, 0.1, -50], [1000000, 2, 50])
+        p0=[5000, 0.2, 0]
+        bounds=([100, 0.01, -100], [1000000, 0.5, 100])
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
         return -1
 
-    popt, pcov = curve_fit(curve, xdata, ydata, p0=p0, bounds=bounds, maxfev=5000)
+    popt, pcov = curve_fit(curve, xdata, ydata, p0=p0, bounds=bounds, maxfev=7000)
 
     print(title)
     descr = '    fit: '
@@ -104,8 +129,20 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
     date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
     date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
 
-    ax.plot(date_total_xaxis, curve(total_xaxis, *popt), 'g-', label='prediction')
-    ax.plot(date_xdata, ydata, 'b-', label='real data')
+    if avg > 1:
+        real_data = moving_average(ydata, avg)
+        real_label = 'real data avg'
+        date_xdata = date_xdata[-len(real_data):]
+    else:
+        real_data = ydata
+        real_label = 'real data'
+
+    if style == 'cyberpunk': # leave default colors for cyberpunk
+        ax.plot(date_total_xaxis, curve(total_xaxis, *popt), label='prediction')
+        ax.plot(date_xdata, real_data, label=real_label)
+    else:
+        ax.plot(date_total_xaxis, curve(total_xaxis, *popt), 'g-', label='prediction')
+        ax.plot(date_xdata, real_data, 'b-', label=real_label)
 
     # popt, pcov = curve_fit(logistic, xdata[:-4], ydata[:-4], p0=[20000, 0.5, 1, 0], bounds=([0, 0, -100, 0], [200000, 10, 100, 1]))
     # ax.plot(date_total_xaxis, logistic(total_xaxis, *popt), 'r-', label='old prediction')
@@ -123,6 +160,9 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
     ax.legend(loc='upper left')
     ax.grid(True)
 
+    if style == 'cyberpunk':
+        mplcyberpunk.add_glow_effects()
+
     if do_imgs:
         plt.savefig('imgs/' + title + '.png', dpi=200)
         plt.clf()
@@ -131,19 +171,32 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
 
     return popt, perr
 
-def plot_data(ydata, ylabel, title, last_date, do_imgs):
+def plot_data(ydata, ylabel, title, last_date, avg=0, do_imgs=False, style='normal'):
+    style = check_style(style)
+
     fig, ax = plt.subplots(figsize=(15,8))
     ax.xaxis.set_major_formatter(myFmt)
     fig.autofmt_xdate()
+
+    if avg > 1:
+        ydata = moving_average(ydata, avg)
+
     xdata = np.array(list(range(-len(ydata), 0))) + 1
     date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
-    ax.plot(date_xdata, ydata, 'b-', label='real data')
+    if style == 'cyberpunk': # leave default colors for cyberpunk
+        ax.plot(date_xdata, ydata, label='real data')
+    else:
+        ax.plot(date_xdata, ydata, 'b-', label='real data')
 
     ax.set_xlabel('Giorni - date')
     ax.set_ylabel(ylabel)
     ax.set_title(title + ' - ' + str(last_date.strftime("%d-%m-%Y")))
     ax.legend(loc='upper left')
     ax.grid(True)
+    
+    if style == 'cyberpunk':
+        mplcyberpunk.add_glow_effects()
+
     if do_imgs:
         plt.savefig('imgs/' + title + '.png', dpi=200)
         plt.clf()
@@ -159,6 +212,16 @@ if __name__ == '__main__':
         type=str,
         default="n",
         help='y, save imgs - n do not save imgs')
+    parser.add_argument(
+        '--avg',
+        type=int,
+        default=0,
+        help='if > 1 draw plot of avg last --avg days.')
+    parser.add_argument(
+        '--style',
+        type=str,
+        default="normal",
+        help='[normal, cyberpunk] : normal, standard mpl - cyberpunk, cyberpunk style')
 
     args = parser.parse_args()
 
@@ -253,38 +316,38 @@ if __name__ == '__main__':
 
     # Fit curves and generate plots ---------------------------------
 
-    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, do_imgs)
+    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, args.avg, do_imgs, args.style)
 
-    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, do_imgs)
-
-
-    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, do_imgs)
-
-    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, args.avg, do_imgs, args.style)
 
 
-    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
+    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, args.avg, do_imgs, args.style)
 
-    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
-
-
-    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
-
-    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
 
 
-    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, do_imgs)
+    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, args.avg, do_imgs, args.style)
+
+    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, args.avg, do_imgs, args.style)
+
+
+    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, args.avg, do_imgs, args.style)
+
+    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, args.avg, do_imgs, args.style)
+
+
+    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
     
-    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
 
 
-    # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, args.avg, do_imgs, args.style)
 
 
     # Plot number of tests and % of positives --------------------------
 
-    plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, do_imgs)
+    plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, args.avg, do_imgs, args.style)
 
-    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, do_imgs)
+    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, args.avg, do_imgs, args.style)
     
 

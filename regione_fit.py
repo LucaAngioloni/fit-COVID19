@@ -41,6 +41,16 @@ if __name__ == '__main__':
         type=str,
         default="n",
         help='y, save imgs - n do not save imgs')
+    parser.add_argument(
+        '--avg',
+        type=int,
+        default=0,
+        help='if > 0 draw plot of avg last --avg days.')
+    parser.add_argument(
+        '--style',
+        type=str,
+        default="normal",
+        help='[normal, cyberpunk] : normal, standard mpl - cyberpunk, cyberpunk style')
 
     args = parser.parse_args()
 
@@ -137,36 +147,38 @@ if __name__ == '__main__':
 
     # Fit curves and generate plots ---------------------------------
 
-    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, do_imgs)
+    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, args.avg, do_imgs, args.style)
 
-    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, do_imgs)
-
-
-    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, do_imgs)
-
-    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, args.avg, do_imgs, args.style)
 
 
-    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
+    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, args.avg, do_imgs, args.style)
 
-    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
-
-
-    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
-
-    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
 
 
-    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, do_imgs)
+    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, args.avg, do_imgs, args.style)
+
+    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, args.avg, do_imgs, args.style)
+
+
+    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, args.avg, do_imgs, args.style)
+
+    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, args.avg, do_imgs, args.style)
+
+
+    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
     
-    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
 
 
-    # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs)
+    # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs, args.style)
 
 
     # Plot number of tests and % of positives --------------------------
 
-    plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, do_imgs)
+    plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, args.avg, do_imgs, args.style)
 
-    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, do_imgs)
+    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, args.avg, do_imgs, args.style)
+
+
