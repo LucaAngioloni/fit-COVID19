@@ -72,7 +72,17 @@ if __name__ == '__main__':
 
     data = pd.read_csv(StringIO(webFile))
 
+    regioni_ammesse = str(
+        set(data['denominazione_regione'])
+        ).replace("'", "")
+
     data = data[data['denominazione_regione'] == args.regione]
+
+    if len(data) == 0:
+        print("Regione non esistente o scritta in modo sbagliato!")
+        print("Regioni ammesse:")
+        print(regioni_ammesse)
+        sys.exit(-1)
 
     # Parse data and compute time series -----------------------
 
