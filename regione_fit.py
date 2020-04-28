@@ -29,6 +29,7 @@ from fit import logistic, logistic_derivative, logistic_2_ord_derivative, fit_cu
 
 if __name__ == '__main__':
     import argparse
+    from str2bool import str2bool
     parser = argparse.ArgumentParser(
         description='Modello COVID-19 per regione.')
     parser.add_argument(
@@ -51,6 +52,11 @@ if __name__ == '__main__':
         type=str,
         default="normal",
         help='[normal, cyberpunk] : normal, standard mpl - cyberpunk, cyberpunk style')
+    parser.add_argument(
+        '--old_pred',
+        type=str2bool,
+        default=False,
+        help='if True plot also the prediction curve from a week ago.')
 
     args = parser.parse_args()
 
@@ -150,36 +156,36 @@ if __name__ == '__main__':
     growth_factor = gf_list[-1]
     print('Fattore di crescita: {:.3f}'.format(growth_factor))
 
-    avg_growth_factor = np.mean(gf_list[-3:])
+    avg_growth_factor = np.mean(gf_list[-4:])
     print('Fattore di crescita mediato: {:.3f}'.format(avg_growth_factor))
 
     print(gf_list)
 
     # Fit curves and generate plots ---------------------------------
 
-    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, args.avg, do_imgs, args.style)
+    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, args.avg, do_imgs, args.style)
-
-
-    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, args.avg, do_imgs, args.style)
-
-    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
 
-    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, args.avg, do_imgs, args.style)
+    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, args.avg, do_imgs, args.style)
-
-
-    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, args.avg, do_imgs, args.style)
-
-    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, args.avg, do_imgs, args.style)
+    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
 
-    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
+    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+
+    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+
+
+    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+
+    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+
+
+    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
     
-    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style)
+    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
 
     # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs, args.style)

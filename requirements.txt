@@ -1,3 +1,4 @@
+str2bool
 matplotlib
 numpy
 pandas
