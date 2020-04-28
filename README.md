@@ -23,6 +23,7 @@ optional arguments:
   --avg AVG      if > 1 draw plot of avg last --avg days.
   --style STYLE  [normal, cyberpunk] : normal, standard mpl - cyberpunk,
                  cyberpunk style
+  --old_pred OLD_PRED  if True plot also the prediction curve from a week ago.
  ```
 
 ## Predictions for a region:
@@ -38,11 +39,12 @@ optional arguments:
   --avg AVG      if > 1 draw plot of avg last --avg days.
   --style STYLE  [normal, cyberpunk] : normal, standard mpl - cyberpunk,
                  cyberpunk style
+  --old_pred OLD_PRED  if True plot also the prediction curve from a week ago.
 ```
 
 ## Examples
-![Totale contagi](https://fit-covid19.herokuapp.com/imgs/Contagi.png?r=true "Totale contagi")
-![Contagi giornalieri](https://fit-covid19.herokuapp.com/imgs/Nuovi%20Contagiati.png?r=true "Contagi giornalieri")
+![Totale contagi](https://fit-covid19.herokuapp.com/imgs/Contagi.png?re=true "Totale contagi")
+![Contagi giornalieri](https://fit-covid19.herokuapp.com/imgs/Nuovi%20Contagiati.png?re=true "Contagi giornalieri")
 
 
 If you know this stuff and you think you can contribute please just let me know: fork this repo, pull request, star this repo, send me an email.
