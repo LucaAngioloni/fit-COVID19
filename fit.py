@@ -283,6 +283,8 @@ if __name__ == '__main__':
 
     nuovi_tamponi = tamponi_totali[1:] - tamponi_totali[:-1]
 
+    tasso_mortalita = nuovi_deceduti / totale_attualmente_positivi[:-1]
+
     # Print stats ---------------------------------------------
 
     date_string = data.iloc[-1:]['data'].values[0]
@@ -358,5 +360,7 @@ if __name__ == '__main__':
     plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, args.avg, do_imgs, args.style)
 
     plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, args.avg, do_imgs, args.style)
+
+    plot_data(tasso_mortalita, '% mortalità', 'Tasso di mortalità %', last_date, args.avg, do_imgs, args.style)
     
 
