@@ -90,7 +90,8 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
     if curve.__name__ == 'logistic':
-        p0=[100000, 0.5, 1, 0]
+        max_val = max(ydata)
+        p0=[max_val, 0.5, 1, 0]
         bounds=(-np.inf, np.inf) #([10, 0.1, -100, 0], [1000000, 10, 100, 1])
         params_names = ['L', 'k', 'x0', 'y0']
     elif curve.__name__ == 'logistic_derivative':
@@ -98,7 +99,8 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
         bounds=(-np.inf, np.inf) #([10, 0.1, -100], [1000000, 10, 100])
         params_names = ['L', 'k', 'x0']
     elif curve.__name__ == 'logistic_2_ord_derivative':
-        p0=[5000, 0.2, 0]
+        max_val = sum(ydata) / 2 # empirical value...
+        p0=[max_val, 0.2, 0]
         bounds=([100, 0.01, -100], [1000000, 0.5, 100])
         params_names = ['L', 'k', 'x0']
     else:
