@@ -101,7 +101,7 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
     elif curve.__name__ == 'logistic_2_ord_derivative':
         max_val = sum(ydata) / 2 # empirical value...
         p0=[max_val, 0.2, 0]
-        bounds=([100, 0.01, -100], [1000000, 0.5, 100])
+        bounds=([10, 0.01, -100], [1000000, 0.5, 100])
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
