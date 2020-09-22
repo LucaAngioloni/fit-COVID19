@@ -103,13 +103,16 @@ if __name__ == '__main__':
     totale_casi = np.array(totale_casi)
     nuovi = totale_casi[1:] - totale_casi[:-1]
 
+    n_gf_l = np.copy(nuovi)
+    n_gf_l[n_gf_l == 0] = 0.00001
+
     deceduti = np.array(deceduti)
     nuovi_deceduti = deceduti[1:] - deceduti[:-1]
 
     dimessi_guariti = np.array(dimessi_guariti)
     nuovi_guariti = dimessi_guariti[1:] - dimessi_guariti[:-1]
 
-    gf_list = nuovi[1:] / nuovi[:-1]
+    gf_list = n_gf_l[1:] / n_gf_l[:-1]
 
     ricoverati_con_sintomi = np.array(ricoverati_con_sintomi)
     nuovi_ricoverati = ricoverati_con_sintomi[1:] - ricoverati_con_sintomi[:-1]
@@ -119,12 +122,15 @@ if __name__ == '__main__':
 
     totale_attualmente_positivi = totale_casi - deceduti - dimessi_guariti
 
+    tm_tot_a_pos = np.copy(totale_attualmente_positivi)
+    tm_tot_a_pos[tm_tot_a_pos == 0] = 0.00001
+
     nuovi_tamponi = tamponi_totali[1:] - tamponi_totali[:-1]
     m = np.median(nuovi_tamponi[nuovi_tamponi > 0])
     # Assign the median to the zero elements 
     nuovi_tamponi[nuovi_tamponi == 0] = m
 
-    tasso_mortalita = nuovi_deceduti / totale_attualmente_positivi[:-1]
+    tasso_mortalita = nuovi_deceduti / tm_tot_a_pos[:-1]
 
     # Print stats ---------------------------------------------
 
