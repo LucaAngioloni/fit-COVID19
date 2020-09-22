@@ -206,7 +206,7 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
 
     return popt, perr
 
-def plot_data(ydata, ylabel, title, last_date, avg=0, do_imgs=False, style='normal'):
+def plot_data(ydata, ylabel, title, last_date, avg=0, do_imgs=False, style='normal', img_path='imgs/'):
     style = check_style(style)
 
     fig, ax = plt.subplots(figsize=(15,8))
@@ -233,7 +233,7 @@ def plot_data(ydata, ylabel, title, last_date, avg=0, do_imgs=False, style='norm
         mplcyberpunk.add_glow_effects()
 
     if do_imgs:
-        plt.savefig('imgs/' + title + '.png', dpi=200)
+        plt.savefig(img_path + title + '.png', dpi=200)
         plt.clf()
     else:
         plt.show()
