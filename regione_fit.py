@@ -25,7 +25,7 @@ show_every = 3 # int value that defines how often to show a date in the x axis. 
 coeff_std = 3.5 # coefficient that defines how many standard deviations to use
 coeff_std_d = 1.5
 
-from fit import logistic, logistic_derivative, logistic_2_ord_derivative, fit_curve, plot_data
+from fit import logistic, logistic_derivative, logistic_2_ord_derivative, fit_curve, plot_data, date_format
 
 if __name__ == '__main__':
     import argparse
@@ -120,14 +120,15 @@ if __name__ == '__main__':
     totale_attualmente_positivi = totale_casi - deceduti - dimessi_guariti
 
     nuovi_tamponi = tamponi_totali[1:] - tamponi_totali[:-1]
+    m = np.median(nuovi_tamponi[nuovi_tamponi > 0])
+    # Assign the median to the zero elements 
+    nuovi_tamponi[nuovi_tamponi == 0] = m
 
     tasso_mortalita = nuovi_deceduti / totale_attualmente_positivi[:-1]
 
     # Print stats ---------------------------------------------
 
     date_string = data.iloc[-1:]['data'].values[0]
-    # date_format = "%Y-%m-%d %H:%M:%S" # Old date format (changed 25/03/2020)
-    date_format = "%Y-%m-%dT%H:%M:%S"
     last_date = datetime.strptime(date_string, date_format)
     print("Ultimo aggiornamento: {}".format(last_date))
 

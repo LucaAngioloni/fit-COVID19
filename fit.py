@@ -27,6 +27,10 @@ coeff_std_d = 2
 
 old_pred_days = 7
 
+# date_format = "%Y-%m-%d %H:%M:%S" # Old date format (changed 25/03/2020)
+date_format = "%Y-%m-%dT%H:%M:%S"
+second_wave_start = datetime.strptime('2020-07-04T00:00:00', date_format)
+
 def logistic(x, L, k, x0, y0):
     """
     General Logistic function.
@@ -85,12 +89,26 @@ def check_style(style):
     return style
 
 def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=False, style='normal', old_pred=False):
+    show_every = int(len(ydata)/20)
+
     style = check_style(style)
 
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
+    if last_date > second_wave_start:
+        # predictions only on second wave
+        diff = last_date - second_wave_start
+        num_days_2nd = diff.days
+        y_fit = ydata[-num_days_2nd:]
+        x_fit = xdata[-num_days_2nd:]
+        second_wave_label = " second wave"
+    else:
+        y_fit = ydata
+        x_fit = xdata
+        second_wave_label = ""
+
     if curve.__name__ == 'logistic':
-        max_val = max(ydata)
+        max_val = max(y_fit)
         p0=[max_val, 0.5, 1, 0]
         bounds=(-np.inf, np.inf) #([10, 0.1, -100, 0], [1000000, 10, 100, 1])
         params_names = ['L', 'k', 'x0', 'y0']
@@ -99,29 +117,34 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
         bounds=(-np.inf, np.inf) #([10, 0.1, -100], [1000000, 10, 100])
         params_names = ['L', 'k', 'x0']
     elif curve.__name__ == 'logistic_2_ord_derivative':
-        max_val = sum(ydata) / 2 # empirical value...
+        max_val = sum(y_fit) / 2 # empirical value...
         p0=[max_val, 0.2, 0]
-        bounds=([10, 0.01, -100], [1000000, 0.5, 100])
+        bounds=(-np.inf, np.inf) # bounds=([10, 0.01, -100], [1000000, 0.5, 100])
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
         return -1
 
-    popt, pcov = curve_fit(curve, xdata, ydata, p0=p0, bounds=bounds, maxfev=7000)
+    try:
+        popt, pcov = curve_fit(curve, x_fit, y_fit, p0=p0, bounds=bounds, maxfev=7000)
+        error = False
+        print(title)
+        descr = '    fit: '
+        for i, param in enumerate(params_names):
+            descr = descr + "{}={:.3f}".format(param, popt[i])
+            if i < len(params_names) - 1:
+                descr = descr + ', '
+        print(descr)
 
-    print(title)
-    descr = '    fit: '
-    for i, param in enumerate(params_names):
-        descr = descr + "{}={:.3f}".format(param, popt[i])
-        if i < len(params_names) - 1:
-            descr = descr + ', '
-    print(descr)
+        perr = np.sqrt(np.diag(pcov))
+        print(perr)
 
-    perr = np.sqrt(np.diag(pcov))
-    print(perr)
-
-    pworst = popt + coeff_std*perr
-    pbest = popt - coeff_std*perr
+        pworst = popt + coeff_std*perr
+        pbest = popt - coeff_std*perr
+    except:
+        popt, pcov = 0, 0
+        error = True
+        perr = None
 
     fig, ax = plt.subplots(figsize=(15,8))
 
@@ -142,20 +165,27 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
         real_label = 'real data'
 
     if style == 'cyberpunk': # leave default colors for cyberpunk
-        ax.plot(date_total_xaxis, curve(total_xaxis, *popt), label='prediction')
+        if not error:
+            ax.plot(date_total_xaxis, curve(total_xaxis, *popt), label='prediction' + second_wave_label)
         ax.plot(date_xdata, real_data, label=real_label)
     else:
-        ax.plot(date_total_xaxis, curve(total_xaxis, *popt), 'g-', label='prediction')
+        if not error:
+            ax.plot(date_total_xaxis, curve(total_xaxis, *popt), 'g-', label='prediction' + second_wave_label)
         ax.plot(date_xdata, real_data, 'b-', label=real_label)
 
     if old_pred and len(ydata) > old_pred_days + 1:
-        popt, pcov = curve_fit(curve, xdata[:-old_pred_days], ydata[:-old_pred_days], p0=p0, bounds=bounds, maxfev=7000)
-        ax.plot(date_total_xaxis, curve(total_xaxis, *popt), label='old prediction')
+        if not error:
+            popt, pcov = curve_fit(curve, xdata[:-old_pred_days], ydata[:-old_pred_days], p0=p0, bounds=bounds, maxfev=7000)
+        ax.plot(date_total_xaxis, curve(total_xaxis, *popt), label='old prediction' + second_wave_label)
 
     future_axis = total_xaxis[len(ydata) - days_past:]
     date_future_axis = [last_date + timedelta(days=int(i)) for i in future_axis]
-    ax.fill_between(date_future_axis, curve(future_axis, *pbest), curve(future_axis, *pworst), 
-        facecolor='red', alpha=0.2, label='std')
+    if not error:
+        best_curve = curve(future_axis, *pbest)
+        worst_curve = curve(future_axis, *pworst)
+        if np.max(np.abs(best_curve-worst_curve)) < np.max(np.abs(ydata))*3:
+            ax.fill_between(date_future_axis, best_curve, worst_curve, 
+                facecolor='red', alpha=0.2, label='std')
 
     start = (len(ydata) - days_past - 1) % show_every
     ax.set_xticks(date_total_xaxis[start::show_every])
@@ -284,14 +314,15 @@ if __name__ == '__main__':
     totale_attualmente_positivi = totale_casi - deceduti - dimessi_guariti
 
     nuovi_tamponi = tamponi_totali[1:] - tamponi_totali[:-1]
+    m = np.median(nuovi_tamponi[nuovi_tamponi > 0])
+    # Assign the median to the zero elements 
+    nuovi_tamponi[nuovi_tamponi == 0] = m
 
     tasso_mortalita = nuovi_deceduti / totale_attualmente_positivi[:-1]
 
     # Print stats ---------------------------------------------
 
     date_string = data.iloc[-1:]['data'].values[0]
-    # date_format = "%Y-%m-%d %H:%M:%S" # Old date format (changed 25/03/2020)
-    date_format = "%Y-%m-%dT%H:%M:%S"
     last_date = datetime.strptime(date_string, date_format)
     print("Ultimo aggiornamento: {}".format(last_date))
 
