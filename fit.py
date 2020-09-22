@@ -88,7 +88,7 @@ def check_style(style):
             print("    pip install mplcyberpunk")
     return style
 
-def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=False, style='normal', old_pred=False):
+def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=False, style='normal', img_path='imgs/', old_pred=False):
     show_every = int(len(ydata)/20)
 
     style = check_style(style)
@@ -199,7 +199,7 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
         mplcyberpunk.add_glow_effects()
 
     if do_imgs:
-        plt.savefig('imgs/' + title + '.png', dpi=200)
+        plt.savefig(img_path + title + '.png', dpi=200)
         plt.clf()
     else:
         plt.show()
