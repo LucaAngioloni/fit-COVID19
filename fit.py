@@ -95,6 +95,11 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
 
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
+    total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
+
+    date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
+    date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
+
     if last_date > second_wave_start:
         # predictions only on second wave
         diff = last_date - second_wave_start
@@ -141,20 +146,18 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
 
         pworst = popt + coeff_std*perr
         pbest = popt - coeff_std*perr
+
+        curve_data = curve(total_xaxis, *popt)
     except:
         popt, pcov = 0, 0
         error = True
         perr = None
+        curve_data = None
 
     fig, ax = plt.subplots(figsize=(15,8))
 
     ax.xaxis.set_major_formatter(myFmt)
     fig.autofmt_xdate()
-
-    total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
-
-    date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
-    date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
 
     if avg > 1 and len(ydata) > avg + 1:
         real_data = moving_average(ydata, avg)
@@ -166,17 +169,17 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
 
     if style == 'cyberpunk': # leave default colors for cyberpunk
         if not error:
-            ax.plot(date_total_xaxis, curve(total_xaxis, *popt), label='prediction' + second_wave_label)
+            ax.plot(date_total_xaxis, curve_data, label='prediction' + second_wave_label)
         ax.plot(date_xdata, real_data, label=real_label)
     else:
         if not error:
-            ax.plot(date_total_xaxis, curve(total_xaxis, *popt), 'g-', label='prediction' + second_wave_label)
+            ax.plot(date_total_xaxis, curve_data, 'g-', label='prediction' + second_wave_label)
         ax.plot(date_xdata, real_data, 'b-', label=real_label)
 
     if old_pred and len(ydata) > old_pred_days + 1:
         if not error:
             popt, pcov = curve_fit(curve, xdata[:-old_pred_days], ydata[:-old_pred_days], p0=p0, bounds=bounds, maxfev=7000)
-        ax.plot(date_total_xaxis, curve(total_xaxis, *popt), label='old prediction' + second_wave_label)
+        ax.plot(date_total_xaxis, curve_data, label='old prediction' + second_wave_label)
 
     future_axis = total_xaxis[len(ydata) - days_past:]
     date_future_axis = [last_date + timedelta(days=int(i)) for i in future_axis]
@@ -194,6 +197,13 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
     ax.set_title(title + ' - ' + str(last_date.strftime("%d-%m-%Y")))
     ax.legend(loc='upper left')
     ax.grid(True)
+
+    if not error:
+        real_min = min(np.min(real_data), 0) * 1.7
+        real_max = max(np.max(real_data), 0) * 1.7
+        ymin = max(real_min, min(np.min(real_data), np.min(curve_data), np.min(best_curve), np.min(worst_curve), 0)*1.1)
+        ymax = min(real_max, max(np.max(real_data), np.max(curve_data), np.max(best_curve), np.max(worst_curve), 0)*1.1)
+        ax.set_ylim([ymin,ymax])
 
     if style == 'cyberpunk':
         mplcyberpunk.add_glow_effects()
