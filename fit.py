@@ -16,20 +16,22 @@ from scipy.optimize import curve_fit
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
-days_past = -2 # days beyond the start of the data to plot
-days_future = 50 # days after the end of the data to predict and plot
+days_past = -2  #  days beyond the start of the data to plot
+days_future = 50  # days after the end of the data to predict and plot
 
-myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
-show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
+myFmt = mdates.DateFormatter('%d/%m')  # date formatter for matplotlib
+# int value that defines how often to show a date in the x axis. (used not to clutter the axis)
+show_every = 3
 
-coeff_std = 4 # coefficient that defines how many standard deviations to use
+coeff_std = 4  # coefficient that defines how many standard deviations to use
 coeff_std_d = 2
 
 old_pred_days = 7
 
 # date_format = "%Y-%m-%d %H:%M:%S" # Old date format (changed 25/03/2020)
 date_format = "%Y-%m-%dT%H:%M:%S"
-second_wave_start = datetime.strptime('2020-07-04T00:00:00', date_format)
+last_wave_start = datetime.strptime('2021-10-20T00:00:00', date_format)
+
 
 def logistic(x, L, k, x0, y0):
     """
@@ -45,6 +47,7 @@ def logistic(x, L, k, x0, y0):
     y = L / (1 + np.exp(-k*(x-x0))) + y0
     return y
 
+
 def logistic_derivative(x, L, k, x0):
     """
     General Gaussian like function (derivative of the logistic).
@@ -58,11 +61,13 @@ def logistic_derivative(x, L, k, x0):
     y = k * L * (np.exp(-k*(x-x0))) / np.power(1 + np.exp(-k*(x-x0)), 2)
     return y
 
+
 def logistic_2_ord_derivative(x, L, k, x0):
     """
     General Gaussian like derivative function (derivative of the logistic derivative).
     """
-    y = (k**2 * L * np.exp(k*(x+x0)) * (np.exp(k*x0) - np.exp(k*x))) / np.power(np.exp(k*x) + np.exp(k*x0), 3)
+    y = (k**2 * L * np.exp(k*(x+x0)) * (np.exp(k*x0) - np.exp(k*x))) / \
+        np.power(np.exp(k*x) + np.exp(k*x0), 3)
     return y
 
 
@@ -76,6 +81,7 @@ def moving_average(x, w):
     """
     return np.convolve(x, np.ones(w), 'valid') / w
 
+
 def check_style(style):
     if style == 'cyberpunk':
         try:
@@ -88,6 +94,7 @@ def check_style(style):
             print("    pip install mplcyberpunk")
     return style
 
+
 def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=False, style='normal', img_path='imgs/', old_pred=False):
     show_every = int(len(ydata)/20)
 
@@ -95,43 +102,48 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
 
     xdata = np.array(list(range(-len(ydata), 0))) + 1
 
-    total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
+    total_xaxis = np.array(
+        list(range(-len(ydata) + days_past, days_future))) + 1
 
     date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
-    date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
+    date_total_xaxis = [last_date +
+                        timedelta(days=int(i)) for i in total_xaxis]
 
-    if last_date > second_wave_start:
-        # predictions only on second wave
-        diff = last_date - second_wave_start
+    if last_date > last_wave_start:
+        # predictions only on last wave
+        diff = last_date - last_wave_start
         num_days_2nd = diff.days
         y_fit = ydata[-num_days_2nd:]
         x_fit = xdata[-num_days_2nd:]
-        second_wave_label = " second wave"
+        last_wave_label = " last wave"
     else:
         y_fit = ydata
         x_fit = xdata
-        second_wave_label = ""
+        last_wave_label = ""
 
     if curve.__name__ == 'logistic':
         max_val = max(y_fit)
-        p0=[max_val, 0.5, 1, 0]
-        bounds=(-np.inf, np.inf) #([10, 0.1, -100, 0], [1000000, 10, 100, 1])
+        p0 = [max_val, 0.5, 1, 0.001]
+        # ([10, 0.1, -100, 0], [1000000, 10, 100, 1])
+        bounds = (-np.inf, np.inf)
         params_names = ['L', 'k', 'x0', 'y0']
     elif curve.__name__ == 'logistic_derivative':
-        p0=None #[100000, 0.5, 1]
-        bounds=(-np.inf, np.inf) #([10, 0.1, -100], [1000000, 10, 100])
+        p0 = None  # [100000, 0.5, 1]
+        bounds = (-np.inf, np.inf)  # ([10, 0.1, -100], [1000000, 10, 100])
         params_names = ['L', 'k', 'x0']
     elif curve.__name__ == 'logistic_2_ord_derivative':
-        max_val = sum(y_fit) / 2 # empirical value...
-        p0=[max_val, 0.2, 0]
-        bounds=(-np.inf, np.inf) # bounds=([10, 0.01, -100], [1000000, 0.5, 100])
+        max_val = sum(y_fit) / 2  # empirical value...
+        p0 = [max_val, 0.2, 0.001]
+        #  bounds=([10, 0.01, -100], [1000000, 0.5, 100])
+        bounds = (-np.inf, np.inf)
         params_names = ['L', 'k', 'x0']
     else:
         print('this curve is unknown')
         return -1
 
     try:
-        popt, pcov = curve_fit(curve, x_fit, y_fit, p0=p0, bounds=bounds, maxfev=7000)
+        popt, pcov = curve_fit(curve, x_fit, y_fit, p0=p0,
+                               bounds=bounds, maxfev=13500)
         error = False
         print(title)
         descr = '    fit: '
@@ -154,7 +166,7 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
         perr = None
         curve_data = None
 
-    fig, ax = plt.subplots(figsize=(15,8))
+    fig, ax = plt.subplots(figsize=(15, 8))
 
     ax.xaxis.set_major_formatter(myFmt)
     fig.autofmt_xdate()
@@ -167,28 +179,33 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
         real_data = ydata
         real_label = 'real data'
 
-    if style == 'cyberpunk': # leave default colors for cyberpunk
+    if style == 'cyberpunk':  # leave default colors for cyberpunk
         if not error:
-            ax.plot(date_total_xaxis, curve_data, label='prediction' + second_wave_label)
+            ax.plot(date_total_xaxis, curve_data,
+                    label='prediction' + last_wave_label)
         ax.plot(date_xdata, real_data, label=real_label)
     else:
         if not error:
-            ax.plot(date_total_xaxis, curve_data, 'g-', label='prediction' + second_wave_label)
+            ax.plot(date_total_xaxis, curve_data, 'g-',
+                    label='prediction' + last_wave_label)
         ax.plot(date_xdata, real_data, 'b-', label=real_label)
 
     if old_pred and len(ydata) > old_pred_days + 1:
         if not error:
-            popt, pcov = curve_fit(curve, xdata[:-old_pred_days], ydata[:-old_pred_days], p0=p0, bounds=bounds, maxfev=7000)
-        ax.plot(date_total_xaxis, curve_data, label='old prediction' + second_wave_label)
+            popt, pcov = curve_fit(
+                curve, xdata[:-old_pred_days], ydata[:-old_pred_days], p0=p0, bounds=bounds, maxfev=7000)
+        ax.plot(date_total_xaxis, curve_data,
+                label='old prediction' + last_wave_label)
 
     future_axis = total_xaxis[len(ydata) - days_past:]
-    date_future_axis = [last_date + timedelta(days=int(i)) for i in future_axis]
+    date_future_axis = [last_date +
+                        timedelta(days=int(i)) for i in future_axis]
     if not error:
         best_curve = curve(future_axis, *pbest)
         worst_curve = curve(future_axis, *pworst)
         if np.max(np.abs(best_curve-worst_curve)) < np.max(np.abs(ydata))*3:
-            ax.fill_between(date_future_axis, best_curve, worst_curve, 
-                facecolor='red', alpha=0.2, label='std')
+            ax.fill_between(date_future_axis, best_curve, worst_curve,
+                            facecolor='red', alpha=0.2, label='std')
 
     start = (len(ydata) - days_past - 1) % show_every
     ax.set_xticks(date_total_xaxis[start::show_every])
@@ -201,9 +218,11 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
     if not error:
         real_min = min(np.min(real_data), 0) * 1.7
         real_max = max(np.max(real_data), 0) * 1.7
-        ymin = max(real_min, min(np.min(real_data), np.min(curve_data), np.min(best_curve), np.min(worst_curve), 0)*1.1)
-        ymax = min(real_max, max(np.max(real_data), np.max(curve_data), np.max(best_curve), np.max(worst_curve), 0)*1.1)
-        ax.set_ylim([ymin,ymax])
+        ymin = max(real_min, min(np.min(real_data), np.min(
+            curve_data), np.min(best_curve), np.min(worst_curve), 0)*1.1)
+        ymax = min(real_max, max(np.max(real_data), np.max(
+            curve_data), np.max(best_curve), np.max(worst_curve), 0)*1.1)
+        ax.set_ylim([ymin, ymax])
 
     if style == 'cyberpunk':
         mplcyberpunk.add_glow_effects()
@@ -216,10 +235,11 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, avg=0, do_imgs=
 
     return popt, perr
 
+
 def plot_data(ydata, ylabel, title, last_date, avg=0, do_imgs=False, style='normal', img_path='imgs/'):
     style = check_style(style)
 
-    fig, ax = plt.subplots(figsize=(15,8))
+    fig, ax = plt.subplots(figsize=(15, 8))
     ax.xaxis.set_major_formatter(myFmt)
     fig.autofmt_xdate()
 
@@ -228,7 +248,7 @@ def plot_data(ydata, ylabel, title, last_date, avg=0, do_imgs=False, style='norm
 
     xdata = np.array(list(range(-len(ydata), 0))) + 1
     date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
-    if style == 'cyberpunk': # leave default colors for cyberpunk
+    if style == 'cyberpunk':  # leave default colors for cyberpunk
         ax.plot(date_xdata, ydata, label='real data')
     else:
         ax.plot(date_xdata, ydata, 'b-', label='real data')
@@ -238,7 +258,7 @@ def plot_data(ydata, ylabel, title, last_date, avg=0, do_imgs=False, style='norm
     ax.set_title(title + ' - ' + str(last_date.strftime("%d-%m-%Y")))
     ax.legend(loc='upper left')
     ax.grid(True)
-    
+
     if style == 'cyberpunk':
         mplcyberpunk.add_glow_effects()
 
@@ -247,6 +267,7 @@ def plot_data(ydata, ylabel, title, last_date, avg=0, do_imgs=False, style='norm
         plt.clf()
     else:
         plt.show()
+
 
 if __name__ == '__main__':
     import argparse
@@ -290,7 +311,7 @@ if __name__ == '__main__':
 
     url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'
     webFile = url_request.urlopen(url).read()
-    webFile = webFile.decode('utf-8')  
+    webFile = webFile.decode('utf-8')
 
     data = pd.read_csv(StringIO(webFile))
 
@@ -331,7 +352,7 @@ if __name__ == '__main__':
 
     nuovi_tamponi = tamponi_totali[1:] - tamponi_totali[:-1]
     m = np.median(nuovi_tamponi[nuovi_tamponi > 0])
-    # Assign the median to the zero elements 
+    # Assign the median to the zero elements
     nuovi_tamponi[nuovi_tamponi == 0] = m
 
     tasso_mortalita = nuovi_deceduti / tm_tot_a_pos[:-1]
@@ -376,40 +397,46 @@ if __name__ == '__main__':
 
     # Fit curves and generate plots ---------------------------------
 
-    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati',
+                                 last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati',
+              last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
+    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti',
+                                 last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti',
+              last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati',
+                                 'totale ricoverati', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
+    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati',
+              last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva',
+                                     'totale in terapia', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva',
+              'nuovi in terapia', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
+    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti',
+                                     last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti',
+              last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
-
-
-    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
-    
-    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
-
-
-    fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
-
+    fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi',
+              'positivi', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
     # Plot number of tests and % of positives --------------------------
 
-    plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, args.avg, do_imgs, args.style)
+    plot_data(nuovi_tamponi, 'tamponi al giorno',
+              'Tamponi Giornalieri', last_date, args.avg, do_imgs, args.style)
 
-    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, args.avg, do_imgs, args.style)
+    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %',
+              last_date, args.avg, do_imgs, args.style)
 
-    plot_data(tasso_mortalita, '% mortalità', 'Tasso di mortalità %', last_date, args.avg, do_imgs, args.style)
-    
-
+    plot_data(tasso_mortalita, '% mortalità', 'Tasso di mortalità %',
+              last_date, args.avg, do_imgs, args.style)

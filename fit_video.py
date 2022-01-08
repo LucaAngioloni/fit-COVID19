@@ -18,14 +18,16 @@ from scipy.optimize import curve_fit
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
-days_past = -2 # days beyond the start of the data to plot
-days_future = 40 # days after the end of the data to predict and plot
+days_past = -2  #  days beyond the start of the data to plot
+days_future = 40  # days after the end of the data to predict and plot
 
-myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
-show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
+myFmt = mdates.DateFormatter('%d/%m')  # date formatter for matplotlib
+# int value that defines how often to show a date in the x axis. (used not to clutter the axis)
+show_every = 3
 
-coeff_std = 3.5 # coefficient that defines how many standard deviations to use
+coeff_std = 3.5  # coefficient that defines how many standard deviations to use
 coeff_std_d = 1.5
+
 
 def logistic(x, L, k, x0, y0):
     """
@@ -41,6 +43,7 @@ def logistic(x, L, k, x0, y0):
     y = L / (1 + np.exp(-k*(x-x0))) + y0
     return y
 
+
 def logistic_derivative(x, L, k, x0):
     """
     General Gaussian like function (derivative of the logistic).
@@ -54,9 +57,10 @@ def logistic_derivative(x, L, k, x0):
     y = k * L * (np.exp(-k*(x-x0))) / np.power(1 + np.exp(-k*(x-x0)), 2)
     return y
 
+
 def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
     ims = []
-    fig, ax = plt.subplots(figsize=(15,8))
+    fig, ax = plt.subplots(figsize=(15, 8))
 
     ax.xaxis.set_major_formatter(myFmt)
     fig.autofmt_xdate()
@@ -75,12 +79,12 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
         xdata = np.array(list(range(-len(ydata), 0))) + 1
 
         if curve.__name__ == 'logistic':
-            p0=[20000, 0.5, 1, 0]
-            bounds=([0, 0, -100, 0], [200000, 10, 100, 1])
+            p0 = [20000, 0.5, 1, 0]
+            bounds = ([0, 0, -100, 0], [200000, 10, 100, 1])
             params_names = ['L', 'k', 'x0', 'y0']
         elif curve.__name__ == 'logistic_derivative':
-            p0=[20000, 0.5, 1]
-            bounds=([0, 0, -100], [200000, 10, 100])
+            p0 = [20000, 0.5, 1]
+            bounds = ([0, 0, -100], [200000, 10, 100])
             params_names = ['L', 'k', 'x0']
         else:
             print('this curve is unknown')
@@ -102,12 +106,15 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
         pworst = popt + coeff_std*perr
         pbest = popt - coeff_std*perr
 
-        total_xaxis = np.array(list(range(-len(ydata) + days_past, days_future))) + 1
+        total_xaxis = np.array(
+            list(range(-len(ydata) + days_past, days_future))) + 1
 
         date_xdata = [last_date + timedelta(days=int(i)) for i in xdata]
-        date_total_xaxis = [last_date + timedelta(days=int(i)) for i in total_xaxis]
+        date_total_xaxis = [last_date +
+                            timedelta(days=int(i)) for i in total_xaxis]
 
-        im = ax.plot(date_total_xaxis, curve(total_xaxis, *popt), 'g-', label='prediction')
+        im = ax.plot(date_total_xaxis, curve(
+            total_xaxis, *popt), 'g-', label='prediction')
         ax.plot(date_xdata, ydata, 'b-', label='real data')
 
         # popt, pcov = curve_fit(logistic, xdata[:-4], ydata[:-4], p0=[20000, 0.5, 1, 0], bounds=([0, 0, -100, 0], [200000, 10, 100, 1]))
@@ -115,7 +122,7 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
 
         # future_axis = total_xaxis[len(ydata) - days_past:]
         # date_future_axis = [last_date + timedelta(days=int(i)) for i in future_axis]
-        # im = ax.fill_between(date_future_axis, curve(future_axis, *pbest), curve(future_axis, *pworst), 
+        # im = ax.fill_between(date_future_axis, curve(future_axis, *pbest), curve(future_axis, *pworst),
         #     facecolor='red', alpha=0.2, label='std')
 
         start = (len(ydata) - days_past - 1) % show_every
@@ -125,14 +132,15 @@ def fit_curve(curve, ydata, title, ylabel, last_date, coeff_std, do_imgs=False):
         ims.append(im)
 
     # ax.legend(loc='upper left')
-    
+
     ani = animation.ArtistAnimation(fig, ims, interval=500, blit=True,
-                                repeat_delay=1000)
+                                    repeat_delay=1000)
     if do_imgs:
         ani.save('imgs/' + title + '.mp4')
     else:
         plt.show()
     return popt, perr
+
 
 if __name__ == '__main__':
     import argparse
@@ -156,7 +164,7 @@ if __name__ == '__main__':
 
     url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'
     webFile = url_request.urlopen(url).read()
-    webFile = webFile.decode('utf-8')  
+    webFile = webFile.decode('utf-8')
 
     data = pd.read_csv(StringIO(webFile))
 
@@ -228,28 +236,32 @@ if __name__ == '__main__':
 
     # Fit curves and generate plots ---------------------------------
 
-    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, do_imgs)
+    p_cont, err_cont = fit_curve(
+        logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, do_imgs)
 
-    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati',
+              'nuovi contagiati', last_date, coeff_std_d, do_imgs)
 
+    p_dead, err_dead = fit_curve(
+        logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, do_imgs)
 
-    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, do_imgs)
+    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti',
+              'nuovi deceduti', last_date, coeff_std_d, do_imgs)
 
-    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, do_imgs)
+    p_hosp, err_hosp = fit_curve(logistic, ricoverati_con_sintomi,
+                                 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
 
+    fit_curve(logistic_derivative, nuovi_ricoverati, 'Nuovi Ricoverati',
+              'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
 
-    p_hosp, err_hosp = fit_curve(logistic, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, do_imgs)
+    p_intens, err_intens = fit_curve(
+        logistic, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
 
-    fit_curve(logistic_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, do_imgs)
+    fit_curve(logistic_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva',
+              'nuovi in terapia', last_date, coeff_std_d, do_imgs)
 
+    p_healed, err_healed = fit_curve(
+        logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, do_imgs)
 
-    p_intens, err_intens = fit_curve(logistic, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, do_imgs)
-
-    fit_curve(logistic_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, do_imgs)
-
-
-    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, do_imgs)
-    
-    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, do_imgs)
-
-
+    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti',
+              'nuovi guariti', last_date, coeff_std_d, do_imgs)

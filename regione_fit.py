@@ -1,3 +1,4 @@
+from fit import logistic, logistic_derivative, logistic_2_ord_derivative, fit_curve, plot_data, date_format
 import numpy as np
 import pandas as pd
 from datetime import timedelta
@@ -5,7 +6,7 @@ from datetime import datetime
 from io import StringIO
 from urllib import request as url_request
 import os
-import sys    
+import sys
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -16,16 +17,16 @@ from scipy.optimize import curve_fit
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 
-days_past = -2 # days beyond the start of the data to plot
-days_future = 40 # days after the end of the data to predict and plot
+days_past = -2  #  days beyond the start of the data to plot
+days_future = 40  # days after the end of the data to predict and plot
 
-myFmt = mdates.DateFormatter('%d/%m') # date formatter for matplotlib
-show_every = 3 # int value that defines how often to show a date in the x axis. (used not to clutter the axis)
+myFmt = mdates.DateFormatter('%d/%m')  # date formatter for matplotlib
+# int value that defines how often to show a date in the x axis. (used not to clutter the axis)
+show_every = 3
 
-coeff_std = 3.5 # coefficient that defines how many standard deviations to use
+coeff_std = 3.5  # coefficient that defines how many standard deviations to use
 coeff_std_d = 1.5
 
-from fit import logistic, logistic_derivative, logistic_2_ord_derivative, fit_curve, plot_data, date_format
 
 if __name__ == '__main__':
     import argparse
@@ -74,13 +75,13 @@ if __name__ == '__main__':
 
     url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv'
     webFile = url_request.urlopen(url).read()
-    webFile = webFile.decode('utf-8')  
+    webFile = webFile.decode('utf-8')
 
     data = pd.read_csv(StringIO(webFile))
 
     regioni_ammesse = str(
         set(data['denominazione_regione'])
-        ).replace("'", "")
+    ).replace("'", "")
 
     data = data[data['denominazione_regione'] == args.regione]
 
@@ -127,7 +128,7 @@ if __name__ == '__main__':
 
     nuovi_tamponi = tamponi_totali[1:] - tamponi_totali[:-1]
     m = np.median(nuovi_tamponi[nuovi_tamponi > 0])
-    # Assign the median to the zero elements 
+    # Assign the median to the zero elements
     nuovi_tamponi[nuovi_tamponi == 0] = m
 
     tasso_mortalita = nuovi_deceduti / tm_tot_a_pos[:-1]
@@ -172,40 +173,45 @@ if __name__ == '__main__':
 
     # Fit curves and generate plots ---------------------------------
 
-    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    p_cont, err_cont = fit_curve(logistic, totale_casi, 'Contagi', 'totale contagiati',
+                                 last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    fit_curve(logistic_derivative, nuovi, 'Nuovi Contagiati', 'nuovi contagiati',
+              last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
+    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti',
+                                 last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    p_dead, err_dead = fit_curve(logistic, deceduti, 'Deceduti', 'totale deceduti', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti',
+              last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_derivative, nuovi_deceduti, 'Nuovi Deceduti', 'nuovi deceduti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati',
+                                 'totale ricoverati', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
+    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati',
+              last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    p_hosp, err_hosp = fit_curve(logistic_derivative, ricoverati_con_sintomi, 'Ricoverati', 'totale ricoverati', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva',
+                                     'totale in terapia', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    fit_curve(logistic_2_ord_derivative, nuovi_ricoverati, 'Nuovi Ricoverati', 'nuovi ricoverati', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
+    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva',
+              'nuovi in terapia', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
+    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti',
+                                     last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
-    p_intens, err_intens = fit_curve(logistic_derivative, terapia_intensiva, 'Terapia Intensiva', 'totale in terapia', last_date, coeff_std, args.avg, do_imgs, args.style, old_pred=args.old_pred)
-
-    fit_curve(logistic_2_ord_derivative, nuovi_terapia_intensiva, 'Nuovi in Terapia Intensiva', 'nuovi in terapia', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
-
-
-    p_healed, err_healed = fit_curve(logistic, dimessi_guariti, 'Dimessi Guariti', 'totale dimessi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
-    
-    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti', last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
-
+    fit_curve(logistic_derivative, nuovi_guariti, 'Nuovi Guariti', 'nuovi guariti',
+              last_date, coeff_std_d, args.avg, do_imgs, args.style, old_pred=args.old_pred)
 
     # fit_curve(logistic_derivative, totale_attualmente_positivi, 'Attualmente Positivi', 'positivi', last_date, coeff_std_d, do_imgs, args.style)
 
-
     # Plot number of tests and % of positives --------------------------
 
-    plot_data(nuovi_tamponi, 'tamponi al giorno', 'Tamponi Giornalieri', last_date, args.avg, do_imgs, args.style)
+    plot_data(nuovi_tamponi, 'tamponi al giorno',
+              'Tamponi Giornalieri', last_date, args.avg, do_imgs, args.style)
 
-    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %', last_date, args.avg, do_imgs, args.style)
+    plot_data(nuovi/nuovi_tamponi, '% nuovi', 'Nuovi positivi %',
+              last_date, args.avg, do_imgs, args.style)
 
-    plot_data(tasso_mortalita, '% mortalità', 'Tasso di mortalità %', last_date, args.avg, do_imgs, args.style)
-
-    
+    plot_data(tasso_mortalita, '% mortalità', 'Tasso di mortalità %',
+              last_date, args.avg, do_imgs, args.style)
