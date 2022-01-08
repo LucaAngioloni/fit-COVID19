@@ -134,3 +134,5 @@ imgs/
 spare.py
 
 .DS_Store
+
+.vscode/
